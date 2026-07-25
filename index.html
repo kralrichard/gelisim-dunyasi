@@ -151,10 +151,44 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 #wpad button{position:absolute;pointer-events:auto;background:rgba(255,255,255,.13);backdrop-filter:blur(8px);
   border-radius:50%;display:grid;place-items:center;font-size:1.35rem;transition:transform .12s}
 #wpad button:active{transform:scale(.9);background:rgba(255,255,255,.28)}
-#bZipla{right:20px;bottom:calc(136px + var(--sb));width:66px;height:66px}
-#bUc{right:96px;bottom:calc(150px + var(--sb));width:50px;height:50px;font-size:1.1rem}
-#bKir{right:20px;bottom:calc(212px + var(--sb));width:56px;height:56px}
-#bKoy{right:88px;bottom:calc(216px + var(--sb));width:50px;height:50px;font-size:1.05rem}
+#bZipla{right:18px;bottom:calc(132px + var(--sb));width:64px;height:64px}
+#bUc{right:92px;bottom:calc(146px + var(--sb));width:48px;height:48px;font-size:1.05rem}
+#bKir{right:18px;bottom:calc(206px + var(--sb));width:54px;height:54px}
+#bKoy{right:84px;bottom:calc(210px + var(--sb));width:48px;height:48px;font-size:1rem}
+#bCengel{right:18px;bottom:calc(272px + var(--sb));width:48px;height:48px;font-size:1rem}
+#bDash{right:80px;bottom:calc(272px + var(--sb));width:44px;height:44px;font-size:.95rem}
+#bComel{left:24px;bottom:calc(246px + var(--sb));width:48px;height:48px;font-size:1rem}
+#bComel.on{background:rgba(120,240,180,.42)}
+#bSut{left:82px;bottom:calc(250px + var(--sb));width:44px;height:44px;font-size:1rem;display:none}
+#bSut.on{display:grid}
+
+/* can, skor, diyar kapısı, fırlatma */
+#canBar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(126px + var(--sb));z-index:4;
+  width:150px;height:7px;border-radius:99px;background:rgba(0,0,0,.42);overflow:hidden;opacity:0;transition:opacity .3s}
+#canBar.on{opacity:1}
+#canBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff5d6e,#ffc46b);transition:width .25s}
+#skorTab{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--st) + 54px);z-index:5;
+  background:rgba(8,12,22,.76);backdrop-filter:blur(10px);padding:8px 20px;border-radius:16px;
+  font-weight:800;font-size:1.05rem;display:none;font-variant-numeric:tabular-nums}
+#skorTab.on{display:block}
+#diyarPanel{position:absolute;inset:0;z-index:9;background:rgba(4,6,14,.82);backdrop-filter:blur(16px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px}
+#diyarPanel.on{display:flex;animation:fadein .25s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.dp-head{font-size:1.3rem;font-weight:800;margin-bottom:4px}
+#diyarList{display:flex;flex-direction:column;gap:9px;width:100%;max-width:400px}
+.dp{display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.07);border-radius:20px;
+  padding:14px 16px;width:100%;text-align:left;transition:transform .18s var(--ease),background .2s}
+.dp:active{transform:scale(.97)}
+.dp.on{background:rgba(255,255,255,.18);box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.dp .di{font-size:1.8rem;width:44px;text-align:center}
+.dp b{display:block;font-size:1.03rem;font-weight:800}
+.dp span{font-size:.78rem;color:var(--dim)}
+.dp-kapat{margin-top:6px;background:rgba(255,255,255,.1);border-radius:999px;padding:11px 26px;font-weight:700}
+#firlat{position:absolute;inset:0;z-index:8;pointer-events:none;opacity:0;
+  background:radial-gradient(60% 60% at 50% 80%, rgba(255,190,90,.9), rgba(255,80,20,.55) 45%, #000 100%);
+  transition:opacity .5s}
+#firlat.on{opacity:1}
 #wstick{position:absolute;left:24px;bottom:calc(120px + var(--sb));width:112px;height:112px;border-radius:50%;
   background:rgba(255,255,255,.07);z-index:3;pointer-events:none}
 #wstick i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;
@@ -223,18 +257,31 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
   <canvas id="wcanvas"></canvas>
   <div id="crosshair"></div>
   <div id="wtop">
+    <button class="pill" id="wDiyar">🌍 Dünya</button>
     <div class="pill" id="wstat">…</div>
     <div style="flex:1"></div>
-    <button class="pill" id="wPusula">🧭 Kule</button>
+    <button class="pill" id="wFutbol">⚽</button>
+    <button class="pill" id="wHava">☀️</button>
+    <button class="pill" id="wPusula">🧭</button>
   </div>
   <div id="wmsg"></div>
   <div id="wstick"><i></i></div>
   <div id="wpad">
     <button id="bZipla">⤒</button><button id="bUc">✈</button>
     <button id="bKir">⛏</button><button id="bKoy">🧱</button>
+    <button id="bCengel">🪝</button><button id="bDash">💨</button>
+    <button id="bComel">🐈</button><button id="bSut">⚽</button>
   </div>
   <div id="hotbar"></div>
   <button id="kulePrompt"><span id="kuleIc">🏛️</span><span id="kuleTx">Gir</span></button>
+  <div id="canBar"><i></i></div>
+  <div id="skorTab"></div>
+  <div id="diyarPanel">
+    <div class="dp-head">Diyar Kapısı</div>
+    <div id="diyarList"></div>
+    <button class="dp-kapat" id="dpKapat">Kapat</button>
+  </div>
+  <div id="firlat"></div>
 </section>
 
 <!-- HARİTA -->
@@ -327,11 +374,11 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 <div id="sonuc"><div id="sheet"></div></div>
 <div id="toast"></div>
 
-<script src="data-alan.js?v=6"></script>
-<script src="data-spor.js?v=6"></script>
-<script src="data-dil.js?v=6"></script>
-<script src="games.js?v=6"></script>
-<script src="world.js?v=6"></script>
+<script src="data-alan.js?v=10"></script>
+<script src="data-spor.js?v=10"></script>
+<script src="data-dil.js?v=10"></script>
+<script src="games.js?v=10"></script>
+<script src="world.js?v=10"></script>
 <script>
 /* ============ VERİYİ BİRLEŞTİR ============ */
 const ALAN = [
@@ -689,16 +736,65 @@ function dunyaAc() {
           btn.classList.add('on');
           sfx('note2');
         } else btn.classList.remove('on');
-      }
+      },
+      diyar(d) {
+        $('#wDiyar').textContent = d.ikon + ' ' + d.ad;
+        $('#diyarPanel').classList.remove('on');
+        $('#firlat').classList.remove('on');
+        diyarListeCiz();
+        wmsg(d.ikon + '  ' + d.ad + ' — ' + d.gruplar.join(' · ') + ' kuleleri burada');
+        S.dunya = W.kaydet(); save();
+      },
+      gol(sk) {
+        $('#skorTab').textContent = `⚽  ${sk.sol} — ${sk.sag}`;
+        toast('GOL! 🎉');
+        fanfare();
+      },
+      ruh() {
+        const b = 18, adet = 4;
+        S.env[b] = (S.env[b] || 0) + adet;
+        S.xp += 3; envanterCiz(); save();
+        wmsg('✨ Bilgi Ruhu yakalandı  +4 Neon  +3 XP');
+        sfx('ok');
+      },
+      firlat() { $('#firlat').classList.add('on'); sfx('note3'); }
     });
     if (!ok) { wmsg('Bu cihazda WebGL yok — Harita moduna geç.'); return; }
     wHazir = true;
     W.mesafe = matchMedia('(pointer:coarse)').matches ? 4 : 5;
-    envanterCiz();
+    envanterCiz(); diyarListeCiz();
+    $('#wDiyar').textContent = W.diyar.ikon + ' ' + W.diyar.ad;
   }
   W.boyut();
   if (!wRAF) wLoop(performance.now());
 }
+
+/* --- diyar kapısı --- */
+function diyarListeCiz() {
+  $('#diyarList').innerHTML = W.DIYARLAR.map(d => {
+    const list = ALAN.filter(a => d.gruplar.includes(a.grp));
+    const tot = list.reduce((s, a) => s + KONU[a.id].length, 0);
+    const dn = list.reduce((s, a) => s + alanDone(a.id), 0);
+    const not = {dunya:'Normal yerçekimi · orman, çöl, kar',
+      ay:'Düşük yerçekimi · dev zıplama · gökte Dünya',
+      derin:'Su altı · yüzerek keşif · mercan resifleri',
+      volkan:'Lav · yanarsan can gider · obsidyen dağlar',
+      ruya:'Uçan adalar · neon · yarı yerçekimi'}[d.id];
+    return `<button class="dp${W.diyar.id === d.id ? ' on' : ''}" data-d="${d.id}">
+      <span class="di">${d.ikon}</span>
+      <span style="flex:1"><b>${d.ad}</b><span>${not}</span>
+        <span style="color:#9aa1c4">${list.length} kule · ${dn}/${tot} konu</span></span>
+      ${W.diyar.id === d.id ? '<span>●</span>' : '<span>›</span>'}</button>`;
+  }).join('');
+  $$('#diyarList .dp').forEach(b => b.onclick = () => {
+    const id = b.dataset.d;
+    if (id === W.diyar.id) { $('#diyarPanel').classList.remove('on'); return; }
+    $('#diyarPanel').classList.remove('on');
+    W.diyarGec(id, true);            // roket sahnesiyle
+  });
+}
+$('#wDiyar').onclick = () => { diyarListeCiz(); $('#diyarPanel').classList.add('on'); sfx('note1'); };
+$('#dpKapat').onclick = () => $('#diyarPanel').classList.remove('on');
 let wSay = 0;
 function wLoop(t) {
   if (ekran !== 'dunya') { wRAF = null; return; }
@@ -706,7 +802,12 @@ function wLoop(t) {
   W.kare(t);
   if (++wSay % 12 === 0) {
     const p = W.P;
-    $('#wstat').textContent = `${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)} · ${W.biyom(Math.floor(p.x), Math.floor(p.z))} · ${W.fps}fps${p.ucus ? ' · ✈' : ''}`;
+    $('#wstat').textContent = `${Math.floor(p.x)} ${Math.floor(p.y)} ${Math.floor(p.z)} · ${W.biyom(Math.floor(p.x), Math.floor(p.z))} · ${W.fps}fps${p.ucus ? ' ✈' : ''}${p.comel ? ' 🐈' : ''}`;
+    const cb = $('#canBar');
+    cb.classList.toggle('on', p.can < 99.5);
+    cb.firstElementChild.style.width = Math.max(0, p.can) + '%';
+    $('#skorTab').classList.toggle('on', W.topVar);
+    $('#bSut').classList.toggle('on', W.topVar);
   }
   if (wSay % 900 === 0) { S.dunya = W.kaydet(); save(); }
 }
@@ -741,6 +842,38 @@ $('#bKoy').onclick = koy;
 $('#bZipla').addEventListener('pointerdown', () => W.girdi.zipla = 1);
 $('#bZipla').addEventListener('pointerup', () => W.girdi.zipla = 0);
 $('#bUc').onclick = () => { W.P.ucus = !W.P.ucus; W.P.vy = 0; wmsg(W.P.ucus ? '✈ Uçuş açık' : 'Uçuş kapalı'); sfx('note1'); };
+
+/* --- yetenekler --- */
+function cengel() { if (W.cengelAt()) { sfx('note3'); wmsg('🪝 Çengel!'); } else wmsg('Menzilde tutunacak yer yok'); }
+function dash() { if (W.dash()) sfx('note2'); }
+let comelDurum = false;
+function comelToggle() {
+  comelDurum = !comelDurum; W.comel(comelDurum);
+  $('#bComel').classList.toggle('on', comelDurum);
+  wmsg(comelDurum ? '🐈 Sindin — ruhlar seni geç fark eder' : 'Ayağa kalktın');
+  sfx('tick');
+}
+$('#bCengel').onclick = cengel;
+$('#bDash').onclick = dash;
+$('#bComel').onclick = comelToggle;
+$('#bSut').onclick = () => { if (W.sut()) sfx('ok'); };
+
+/* --- futbol --- */
+$('#wFutbol').onclick = () => {
+  if (W.gecisVar) return;
+  W.sahaKur();
+  $('#skorTab').textContent = '⚽  0 — 0';
+  wmsg('⚽ Saha kuruldu! Topa koş ya da ⚽ ile şut çek');
+  sfx('ok');
+};
+/* --- hava --- */
+const HAVA_IKON = ['☀️', '🌧️', '⛈️'];
+$('#wHava').onclick = () => {
+  W.hava = (W.hava + 1) % 3;
+  $('#wHava').textContent = HAVA_IKON[W.hava];
+  wmsg(['Hava açıldı', 'Yağmur başladı', 'Fırtına!'][W.hava]);
+  sfx('tick');
+};
 $('#wPusula').onclick = () => {
   // en yakın tamamlanmamış kuleye ışınla
   const p = W.P;
@@ -771,6 +904,11 @@ addEventListener('keydown', e => {
   else if (e.code === 'ControlLeft') g.in = 1;
   else if (e.code === 'KeyF') { W.P.ucus = !W.P.ucus; W.P.vy = 0; wmsg(W.P.ucus ? '✈ Uçuş açık' : 'Uçuş kapalı'); }
   else if (e.code === 'KeyE') { if (wKule) { aktifAlanFrom = 'dunya'; oyunKaynak = 'dunya'; openAlan(wKule.a.id); } }
+  else if (e.code === 'KeyG') cengel();
+  else if (e.code === 'KeyQ') dash();
+  else if (e.code === 'KeyC') comelToggle();
+  else if (e.code === 'KeyR') { if (W.topVar) { if (W.sut()) sfx('ok'); } else $('#wFutbol').click(); }
+  else if (e.code === 'KeyT') $('#wDiyar').click();
   else if (e.code >= 'Digit1' && e.code <= 'Digit9') { S.slot = +e.code.slice(5) - 1; envanterCiz(); }
 });
 addEventListener('keyup', e => {
