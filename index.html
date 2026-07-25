@@ -66,7 +66,7 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 #nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--sb));z-index:8;display:flex;gap:4px;
   background:rgba(16,20,36,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border-radius:999px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
-#nav button{display:flex;align-items:center;gap:7px;border-radius:999px;padding:10px 17px;font-size:.84rem;
+#nav button{display:flex;align-items:center;gap:6px;border-radius:999px;padding:10px 13px;font-size:.8rem;
   font-weight:700;color:var(--dim);transition:color .25s,background .3s var(--ease)}
 #nav button.on{color:var(--ink);background:var(--surf2)}
 #nav.hide{opacity:0;pointer-events:none}
@@ -128,6 +128,43 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
   border-radius:18px;padding:15px;transition:transform .18s var(--ease)}
 .btn:active{transform:scale(.97)}
 .btn.soft{background:var(--surf);color:var(--ink)}
+
+/* ---------- 3B MOD ---------- */
+#s-3d{background:radial-gradient(120% 90% at 50% 0%,#161d3a 0%,#0a0e1c 55%,#04060c 100%);overflow:hidden}
+#stage3d{position:absolute;inset:0;perspective:1100px;perspective-origin:50% 46%;touch-action:none;cursor:grab}
+#stage3d:active{cursor:grabbing}
+#globe{position:absolute;left:50%;top:46%;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.t3{position:absolute;transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border-radius:22px;text-align:center;user-select:none;cursor:pointer;
+  box-shadow:0 8px 26px rgba(0,0,0,.45);transition:filter .2s}
+.t3 .e{font-size:1.5rem;line-height:1}
+.t3 .n{font-size:.5rem;font-weight:800;line-height:1.15;padding:0 4px;color:#08101e;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.t3 .code{font-size:.86rem;font-weight:900;color:#08101e}
+.t3.dim{filter:grayscale(.85) brightness(.5)}
+.t3 .ok{position:absolute;top:5px;right:7px;font-size:.6rem;color:#0a3d24;font-weight:900}
+.k3{position:absolute;transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:20px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;
+  cursor:pointer;box-shadow:0 12px 34px rgba(0,0,0,.5);user-select:none}
+.k3 .num{font-size:.66rem;font-weight:900;opacity:.65;color:#08101e}
+.k3 .ttl{font-size:.84rem;font-weight:800;line-height:1.25;color:#08101e}
+.k3 .st{font-size:.62rem;font-weight:800;color:#08101e;opacity:.7}
+.k3.front{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 18px 44px rgba(0,0,0,.6)}
+#d3top{position:absolute;top:calc(var(--st) + 12px);left:0;right:0;z-index:5;display:flex;gap:8px;
+  padding:0 14px;align-items:center}
+#d3chips{position:absolute;top:calc(var(--st) + 60px);left:0;right:0;z-index:5;display:flex;gap:7px;
+  overflow-x:auto;padding:0 14px 4px;scrollbar-width:none}
+#d3chips::-webkit-scrollbar{display:none}
+#d3chips button{background:rgba(255,255,255,.07);border-radius:999px;padding:7px 14px;font-size:.76rem;
+  font-weight:700;color:var(--dim);white-space:nowrap;transition:.2s}
+#d3chips button.on{background:#fff;color:#0a0e1c}
+#d3info{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(78px + var(--sb));z-index:5;
+  text-align:center;pointer-events:none;max-width:92%;
+  background:rgba(8,12,24,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:8px 18px;border-radius:20px}
+#d3info b{display:block;font-size:1.05rem;font-weight:800}
+#d3info span{font-size:.78rem;color:var(--dim)}
 
 #toast{position:fixed;left:50%;bottom:calc(88px + var(--sb));transform:translate(-50%,14px);z-index:30;
   background:var(--ink);color:#080b14;font-weight:750;font-size:.87rem;padding:11px 19px;border-radius:999px;
@@ -193,6 +230,19 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
   </div>
 </section>
 
+<!-- 3B MOD -->
+<section class="scr" id="s-3d">
+  <div id="stage3d"><div id="globe"></div></div>
+  <div id="d3top">
+    <button class="bk" id="d3back" style="display:none">←</button>
+    <div class="pill" id="d3title">🧊 3B Keşif</div>
+    <div style="flex:1"></div>
+    <button class="pill" id="d3shuffle">🎲</button>
+  </div>
+  <div id="d3chips"></div>
+  <div id="d3info"><b id="d3name">Küreyi döndür</b><span id="d3sub">Sürükle · bir alana dokun</span></div>
+</section>
+
 <!-- OYUN -->
 <section class="scr" id="oyun">
   <canvas id="gcanvas"></canvas>
@@ -206,6 +256,7 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 
 <nav id="nav">
   <button class="on" data-s="harita"><span>🗺️</span>Harita</button>
+  <button data-s="3d"><span>🧊</span>3B</button>
   <button data-s="liste"><span>📚</span>Alanlar</button>
   <button data-s="ben"><span>🌱</span>Ben</button>
 </nav>
@@ -213,10 +264,10 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 <div id="sonuc"><div id="sheet"></div></div>
 <div id="toast"></div>
 
-<script src="data-alan.js?v=3"></script>
-<script src="data-spor.js?v=3"></script>
-<script src="data-dil.js?v=3"></script>
-<script src="games.js?v=3"></script>
+<script src="data-alan.js?v=4"></script>
+<script src="data-spor.js?v=4"></script>
+<script src="data-dil.js?v=4"></script>
+<script src="games.js?v=4"></script>
 <script>
 /* ============ VERİYİ BİRLEŞTİR ============ */
 const ALAN = [
@@ -280,6 +331,7 @@ function go(id) {
   $('#stick').classList.toggle('on', id === 'harita');
   if (id === 'liste') buildListe();
   if (id === 'ben') buildBen();
+  if (id === '3d') open3D();
   if (id === 'harita') { $('#tip').classList.add('on'); setTimeout(() => $('#tip').classList.remove('on'), 3200); }
 }
 $$('#nav button').forEach(b => b.onclick = () => { go(b.dataset.s); sfx('tick'); });
@@ -483,7 +535,7 @@ function openAlan(id) {
       <span class="ic" style="background:linear-gradient(150deg,${a.a},${a.b})">${isDone(id, i) ? '✓' : i + 1}</span>
       <span class="tx"><b>${k[0]}</b><span>${isDone(id, i) ? k[1] : 'Oyunu kazan, bilgiyi aç'}</span></span>
       <span class="ck">▶</span></button>`).join('');
-  $$('#konuList .row').forEach(b => b.onclick = () => startGame(id, +b.dataset.i));
+  $$('#konuList .row').forEach(b => b.onclick = () => { oyunKaynak = 'alan'; startGame(id, +b.dataset.i); });
   go('alan');
   sfx('tick');
 }
@@ -537,7 +589,161 @@ function buildBen() {
 $('#sndBtn').onclick = () => { S.snd = S.snd ? 0 : 1; save(); buildBen(); if (S.snd) sfx('ok'); };
 $('#resetBtn').onclick = () => { if (confirm('Tüm ilerlemen silinecek. Emin misin?')) { localStorage.removeItem(KEY); location.reload(); } };
 
+/* ============ 3B MOD ============ */
+const D3 = {mode: 'kure', rx: -8, ry: 0, vrx: 0, vry: .06, z: 0, alan: null, drag: null, moved: 0, filtre: null, raf: null, R: 300};
+const stage = $('#stage3d'), globe = $('#globe');
+const cl = (v, a, b) => v < a ? a : v > b ? b : v;
+
+function buildKure() {
+  const N = ALAN.length, R = Math.max(250, Math.min(Math.min(innerWidth, innerHeight) * .58, 430));
+  D3.R = R; D3.z0 = -(R - 140);
+  const GOLD = Math.PI * (1 + Math.sqrt(5));
+  globe.innerHTML = ALAN.map((a, i) => {
+    const phi = Math.acos(1 - 2 * (i + .5) / N);
+    const lat = 90 - phi * 180 / Math.PI;
+    const lon = (GOLD * (i + .5)) * 180 / Math.PI % 360;
+    const tot = (KONU[a.id] || []).length, dn = alanDone(a.id);
+    const w = 74;
+    return `<div class="t3" data-a="${a.id}" data-lat="${lat.toFixed(2)}" data-lon="${lon.toFixed(2)}"
+      style="width:${w}px;height:${w}px;margin:${-w / 2}px 0 0 ${-w / 2}px;
+      background:linear-gradient(150deg,${a.a},${a.b});
+      transform:rotateY(${lon}deg) rotateX(${-lat}deg) translateZ(${R}px)">
+      ${a.grp === 'Dil' ? `<div class="code">${a.id.slice(4).toUpperCase()}</div>` : `<div class="e">${a.e}</div>`}
+      <div class="n">${a.n}</div>${dn ? `<div class="ok">${dn}/${tot}</div>` : ''}</div>`;
+  }).join('');
+  applyFiltre();
+}
+function buildHalka(id) {
+  const list = KONU[id], a = ALANOF[id], n = list.length;
+  const cw = 136, ch = 152;
+  const R = Math.max(235, (cw + 18) * n / (2 * Math.PI));
+  D3.R = R; D3.z0 = -(R - 165);
+  globe.innerHTML = list.map((k, i) => {
+    const ang = i / n * 360, done = isDone(id, i);
+    return `<div class="k3" data-i="${i}" style="width:${cw}px;height:${ch}px;margin:${-ch / 2}px 0 0 ${-cw / 2}px;
+      background:linear-gradient(155deg,${a.a},${a.b});opacity:${done ? .82 : 1};
+      transform:rotateY(${ang}deg) translateZ(${R}px)">
+      <div class="num">${i + 1} / ${n}</div><div class="ttl">${k[0]}</div>
+      <div class="st">${done ? '✓ tamamlandı' : '▶ oyna'}</div></div>`;
+  }).join('');
+}
+function applyFiltre() {
+  $$('#globe .t3').forEach(el => el.classList.toggle('dim', !!D3.filtre && ALANOF[el.dataset.a].grp !== D3.filtre));
+}
+function apply3D() {
+  globe.style.transform = `translateZ(${(D3.z0 || 0) + D3.z}px) rotateX(${D3.rx}deg) rotateY(${D3.ry}deg)`;
+}
+function loop3D() {
+  if (ekran !== '3d') { D3.raf = null; return; }
+  D3.raf = requestAnimationFrame(loop3D);
+  if (!D3.drag) {
+    D3.ry += D3.vry; D3.rx += D3.vrx;
+    D3.vry *= .95; D3.vrx *= .95;
+    if (D3.mode === 'kure') { if (Math.abs(D3.vry) < .055) D3.vry = .055; }
+    else if (Math.abs(D3.vry) < .01) D3.vry = 0;
+    D3.rx = cl(D3.rx, D3.mode === 'kure' ? -68 : -22, D3.mode === 'kure' ? 68 : 22);
+  }
+  // halkada öne gelen kartı vurgula
+  if (D3.mode === 'halka' && D3.alan) {
+    const list = KONU[D3.alan], n = list.length, adim = 360 / n;
+    const idx = ((Math.round(-D3.ry / adim) % n) + n) % n;
+    if (idx !== D3.front) {
+      D3.front = idx;
+      $$('#globe .k3').forEach((el, i) => el.classList.toggle('front', i === idx));
+      $('#d3name').textContent = list[idx][0];
+      $('#d3sub').textContent = `${idx + 1}/${n} · ${isDone(D3.alan, idx) ? 'tamamlandı' : GAMES[ALANOF[D3.alan].g].ad + ' oyunu'} · karta dokun`;
+      sfx('tick');
+    }
+  }
+  apply3D();
+}
+function open3D() {
+  if (D3.mode === 'halka' && D3.alan) buildHalka(D3.alan); else { D3.mode = 'kure'; buildKure(); }
+  apply3D();
+  if (!D3.raf) loop3D();
+}
+function gir3D(id) {
+  D3.alan = id; D3.mode = 'halka'; D3.rx = -6; D3.ry = 0; D3.z = 0; D3.vry = 0; D3.vrx = 0; D3.front = -1;
+  buildHalka(id);
+  const a = ALANOF[id];
+  document.documentElement.style.setProperty('--a1', a.a);
+  document.documentElement.style.setProperty('--a2', a.b);
+  $('#d3back').style.display = 'grid';
+  $('#d3title').textContent = a.e + ' ' + a.n;
+  $('#d3name').textContent = a.n;
+  $('#d3sub').textContent = `${alanDone(id)}/${KONU[id].length} konu · ${GAMES[a.g].ad} oyunu · karta dokun`;
+  $('#d3chips').style.display = 'none';
+  sfx('ok');
+}
+function geri3D() {
+  D3.mode = 'kure'; D3.alan = null; D3.rx = -8; D3.z = 0; D3.vry = .06;
+  buildKure();
+  $('#d3back').style.display = 'none';
+  $('#d3title').textContent = '🧊 3B Keşif';
+  $('#d3name').textContent = 'Küreyi döndür';
+  $('#d3sub').textContent = 'Sürükle · bir alana dokun';
+  $('#d3chips').style.display = 'flex';
+  sfx('tick');
+}
+$('#d3back').onclick = geri3D;
+$('#d3shuffle').onclick = () => {
+  const a = ALAN[Math.floor(Math.random() * ALAN.length)];
+  const i = Math.floor(Math.random() * KONU[a.id].length);
+  oyunKaynak = '3d'; D3.alan = a.id; D3.mode = 'halka';
+  startGame(a.id, i);
+};
+// grup çipleri
+$('#d3chips').innerHTML = '<button data-g="" class="on">Tümü</button>' + GRUPLAR.map(g => `<button data-g="${g}">${g}</button>`).join('');
+$$('#d3chips button').forEach(b => b.onclick = () => {
+  $$('#d3chips button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  D3.filtre = b.dataset.g || null;
+  applyFiltre();
+  if (D3.filtre) {
+    const el = $$('#globe .t3').find(e => ALANOF[e.dataset.a].grp === D3.filtre);
+    if (el) { D3.ry = -(+el.dataset.lon); D3.rx = +el.dataset.lat; D3.vry = 0; D3.vrx = 0; apply3D(); }
+  }
+  sfx('tick');
+});
+// sürükle
+stage.addEventListener('pointerdown', e => {
+  stage.setPointerCapture(e.pointerId);
+  D3.drag = {x: e.clientX, y: e.clientY}; D3.moved = 0; D3.vry = 0; D3.vrx = 0;
+});
+stage.addEventListener('pointermove', e => {
+  if (!D3.drag) return;
+  const dx = e.clientX - D3.drag.x, dy = e.clientY - D3.drag.y;
+  D3.drag.x = e.clientX; D3.drag.y = e.clientY;
+  D3.moved += Math.abs(dx) + Math.abs(dy);
+  D3.ry += dx * .28; D3.vry = dx * .28;
+  if (D3.mode === 'kure') { D3.rx -= dy * .2; D3.vrx = -dy * .2; }
+  apply3D();
+});
+const bitirDrag = () => { D3.drag = null; };
+stage.addEventListener('pointerup', bitirDrag);
+stage.addEventListener('pointercancel', bitirDrag);
+stage.addEventListener('wheel', e => { e.preventDefault(); D3.z = cl(D3.z - e.deltaY * .5, -520, 400); apply3D(); }, {passive: false});
+// iki parmak yakınlaştırma
+let pinch = 0;
+stage.addEventListener('touchmove', e => {
+  if (e.touches.length !== 2) return;
+  const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  if (pinch) { D3.z = cl(D3.z + (d - pinch) * 1.6, -520, 400); apply3D(); }
+  pinch = d;
+}, {passive: true});
+stage.addEventListener('touchend', () => pinch = 0);
+// seçim
+globe.addEventListener('click', e => {
+  if (D3.moved > 14) return;
+  const t = e.target.closest('.t3');
+  if (t) { gir3D(t.dataset.a); return; }
+  const k = e.target.closest('.k3');
+  if (k && D3.alan) { oyunKaynak = '3d'; startGame(D3.alan, +k.dataset.i); }
+});
+addEventListener('resize', () => { if (ekran === '3d') open3D(); });
+
 /* ============ OYUN HOST ============ */
+let oyunKaynak = 'alan';
 const gc = $('#gcanvas'), gctx = gc.getContext('2d');
 let GS = null, gRAF = null, gAlan = null, gIdx = 0;
 
@@ -576,7 +782,8 @@ gc.addEventListener('pointercancel', e => { if (GS) GS.p.down = false; });
 addEventListener('keydown', e => { if (!GS) return; if (e.key === 'ArrowUp') GS.keys.up = 1; if (e.key === 'ArrowDown') GS.keys.down = 1; });
 addEventListener('keyup', e => { if (!GS) return; if (e.key === 'ArrowUp') GS.keys.up = 0; if (e.key === 'ArrowDown') GS.keys.down = 0; });
 
-$('#gBack').onclick = () => { GS = null; openAlan(gAlan); };
+function oyundanCik() { GS = null; if (oyunKaynak === '3d') { D3.alan = gAlan; D3.mode = 'halka'; go('3d'); gir3D(gAlan); } else openAlan(gAlan); }
+$('#gBack').onclick = oyundanCik;
 $('#gRetry').onclick = () => startGame(gAlan, gIdx);
 
 /* ============ SONUÇ ============ */
@@ -605,20 +812,20 @@ function finish(res) {
         ? `<div class="fact" style="padding:8px 14px">${kelimeler.map(w => `<div class="kelime"><span>${w[0]}</span><b>${w[1]}</b></div>`).join('')}</div>`
         : `<div class="fact">${konu[1]}</div>`}
       ${sonraki >= 0 ? '<button class="btn" id="nx">Sıradaki konu →</button>' : ''}
-      <button class="btn soft" id="bk">Alana dön</button>`;
+      <button class="btn soft" id="bk">${oyunKaynak === '3d' ? '3B moda dön' : 'Alana dön'}</button>`;
   } else {
     sheet.innerHTML = `
       <div class="mark" style="background:rgba(255,255,255,.1);color:#fff">↻</div>
       <h3>Bu sefer olmadı</h3>
       <div class="sub">${GAMES[a.g].ipucu}</div>
       <button class="btn" id="rt">Tekrar dene</button>
-      <button class="btn soft" id="bk">Alana dön</button>`;
+      <button class="btn soft" id="bk">${oyunKaynak === '3d' ? '3B moda dön' : 'Alana dön'}</button>`;
   }
   $('#sonuc').classList.add('on');
   const close = () => $('#sonuc').classList.remove('on');
   if ($('#nx')) $('#nx').onclick = () => { close(); startGame(gAlan, sonraki); };
   if ($('#rt')) $('#rt').onclick = () => { close(); startGame(gAlan, gIdx); };
-  $('#bk').onclick = () => { close(); openAlan(gAlan); };
+  $('#bk').onclick = () => { close(); oyundanCik(); };
 }
 
 /* ============ BAŞLAT ============ */

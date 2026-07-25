@@ -1,5 +1,5 @@
 /* Gelişim Dünyası — offline service worker */
-const CACHE = 'gelisim-v6';
+const CACHE = 'gelisim-v7';
 const ASSETS = ['./', './index.html', './manifest.json',
   './data-alan.js', './data-spor.js', './data-dil.js', './games.js'];
 
