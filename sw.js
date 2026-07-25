@@ -1,7 +1,7 @@
 /* Gelişim Dünyası — offline service worker */
-const CACHE = 'gelisim-v7';
+const CACHE = 'gelisim-v8';
 const ASSETS = ['./', './index.html', './manifest.json',
-  './data-alan.js', './data-spor.js', './data-dil.js', './games.js'];
+  './data-alan.js', './data-spor.js', './data-dil.js', './games.js', './world.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
