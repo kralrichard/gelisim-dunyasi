@@ -3,676 +3,628 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#0e1120">
-<meta name="description" content="100 gelişim konusu. Kaydır, keşfet, süreyi kendin seç.">
+<meta name="theme-color" content="#080b14">
+<meta name="description" content="1000 konu, 110 alan. Her konu bir mini oyun: uçak mühendisliğinde uçak uçur, astronomide uzay gemisi sür.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 <title>Gelişim Dünyası</title>
 <style>
 :root{
-  --bg:#0e1120; --bg2:#141830;
-  --ink:#f2f4ff; --dim:#9aa3c7; --dim2:#6b74a0;
-  --surf:rgba(255,255,255,.055); --surf2:rgba(255,255,255,.09);
+  --bg:#080b14; --ink:#f2f4ff; --dim:#98a1c4; --dim2:#666e94;
+  --surf:rgba(255,255,255,.06); --surf2:rgba(255,255,255,.11);
   --ease:cubic-bezier(.22,1,.36,1);
-  --safe-b:env(safe-area-inset-bottom,0px);
-  --safe-t:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px); --st:env(safe-area-inset-top,0px);
   --a1:#6ea8ff; --a2:#3f6bff;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{
-  background:var(--bg); color:var(--ink); overflow:hidden;
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased; font-size:16px; line-height:1.5;
-}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-input{font:inherit}
+canvas{display:block;touch-action:none}
 
-/* yumuşak arka plan ışığı — aktif kategoriye göre renk alır */
-#aura{position:fixed;inset:-20%;z-index:0;pointer-events:none;transition:background 1.2s var(--ease);
-  background:radial-gradient(45% 35% at 20% 8%, rgba(110,168,255,.20), transparent 70%),
-             radial-gradient(45% 35% at 85% 30%, rgba(177,140,255,.14), transparent 70%)}
+/* ---------- katmanlar ---------- */
+.scr{position:fixed;inset:0;opacity:0;pointer-events:none;transition:opacity .28s var(--ease),transform .32s var(--ease);transform:scale(1.02)}
+.scr.on{opacity:1;pointer-events:auto;transform:none}
+.list{overflow-y:auto;overscroll-behavior:contain;padding:calc(var(--st) + 14px) 0 calc(30px + var(--sb));
+  background:radial-gradient(120% 80% at 50% -10%,#151b33 0%,#0a0e1a 60%,#05070d 100%)}
+.wrap{max-width:720px;margin:0 auto;padding:0 18px}
 
-/* ---------- görünümler ---------- */
-.view{position:fixed;inset:0;z-index:1;overflow-y:auto;overscroll-behavior:contain;
-  padding:calc(var(--safe-t) + 18px) 0 calc(96px + var(--safe-b));
-  opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .3s var(--ease),transform .35s var(--ease)}
-.view.on{opacity:1;transform:none;pointer-events:auto}
-.pad{padding:0 20px}
-.wrap{max-width:720px;margin:0 auto}
-
-h1{font-size:1.75rem;font-weight:800;letter-spacing:-.02em}
-h2{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
-.sub{color:var(--dim);font-size:.9rem;margin-top:2px}
-
-/* üst şerit */
-.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:.86rem}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .top .grow{flex:1;min-width:0}
-.pill{display:flex;align-items:center;gap:6px;background:var(--surf);border-radius:999px;
-  padding:9px 14px;font-size:.9rem;font-weight:700;white-space:nowrap}
+.bk{width:40px;height:40px;border-radius:50%;background:var(--surf);display:grid;place-items:center;font-size:1.1rem;flex:0 0 auto;transition:transform .18s var(--ease)}
+.bk:active{transform:scale(.9)}
 
-/* arama */
-.search{display:flex;align-items:center;gap:10px;background:var(--surf);border-radius:18px;padding:13px 16px;margin-bottom:26px}
+/* ---------- harita HUD ---------- */
+#hudTop{position:fixed;top:calc(var(--st) + 12px);left:0;right:0;display:flex;gap:8px;padding:0 14px;z-index:6;pointer-events:none}
+.pill{background:rgba(15,19,34,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-radius:999px;padding:9px 15px;font-size:.85rem;font-weight:700;white-space:nowrap;pointer-events:auto;
+  transition:transform .18s var(--ease)}
+.pill:active{transform:scale(.94)}
+#hudTop .grow{flex:1}
+#tip{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--st) + 62px);z-index:6;
+  background:rgba(15,19,34,.75);backdrop-filter:blur(14px);padding:7px 16px;border-radius:999px;
+  font-size:.8rem;color:var(--dim);pointer-events:none;opacity:0;transition:opacity .3s}
+#tip.on{opacity:1}
+#enter{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(96px + var(--sb));z-index:7;
+  padding:15px 30px;border-radius:999px;font-weight:800;font-size:1.02rem;color:#06101f;
+  background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 12px 34px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:.3s var(--ease);display:flex;align-items:center;gap:9px;max-width:88vw}
+#enter.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#enter:active{transform:translateX(-50%) scale(.95)}
+#stick{position:fixed;left:22px;bottom:calc(26px + var(--sb));width:118px;height:118px;border-radius:50%;
+  background:rgba(255,255,255,.05);z-index:5;display:none}
+#stick.on{display:block}
+#stick i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;
+  background:rgba(255,255,255,.22);backdrop-filter:blur(6px)}
+
+/* ---------- alt gezinme ---------- */
+#nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--sb));z-index:8;display:flex;gap:4px;
+  background:rgba(16,20,36,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:999px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#nav button{display:flex;align-items:center;gap:7px;border-radius:999px;padding:10px 17px;font-size:.84rem;
+  font-weight:700;color:var(--dim);transition:color .25s,background .3s var(--ease)}
+#nav button.on{color:var(--ink);background:var(--surf2)}
+#nav.hide{opacity:0;pointer-events:none}
+
+/* ---------- kartlar ---------- */
+.row{display:flex;align-items:center;gap:13px;background:var(--surf);border-radius:19px;padding:13px 15px;margin-bottom:9px;
+  width:100%;text-align:left;transition:transform .2s var(--ease),background .2s}
+.row:active{transform:scale(.98);background:var(--surf2)}
+.row .ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:1.45rem;flex:0 0 auto}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-weight:750;font-size:.99rem;letter-spacing:-.01em}
+.row .tx span{color:var(--dim);font-size:.79rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .ck{font-size:1rem;color:var(--dim2);flex:0 0 auto}
+.row.done .ck{color:#5ce6a0}
+
+.search{display:flex;align-items:center;gap:10px;background:var(--surf);border-radius:17px;padding:12px 15px;margin-bottom:18px}
 .search input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-size:1rem}
 .search input::placeholder{color:var(--dim2)}
-
-/* kategori rayı */
-.rail{margin-bottom:28px}
-.railhead{display:flex;align-items:baseline;gap:10px;padding:0 20px;margin-bottom:12px}
-.railhead .ct{color:var(--dim2);font-size:.8rem;font-weight:600;margin-left:auto}
-.scroller{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
-  padding:2px 20px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.scroller::-webkit-scrollbar{display:none}
-
-.tile{flex:0 0 152px;height:176px;border-radius:24px;padding:16px;scroll-snap-align:start;
-  display:flex;flex-direction:column;position:relative;overflow:hidden;
-  transition:transform .28s var(--ease),filter .2s;will-change:transform}
-.tile:active{transform:scale(.955)}
-.tile::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.16),transparent 55%);pointer-events:none}
-.tile .e{font-size:2.1rem;line-height:1}
-.tile .n{margin-top:auto;font-weight:750;font-size:1.02rem;letter-spacing:-.01em;text-shadow:0 1px 6px rgba(0,0,0,.25)}
-.tile .m{font-size:.75rem;opacity:.78;margin-top:3px;font-weight:600}
-.tile.done .e::after{content:'✓';position:absolute;top:16px;right:16px;font-size:.95rem;
-  background:rgba(0,0,0,.28);width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
-
-/* liste kartı (geniş) */
-.row{display:flex;align-items:center;gap:14px;background:var(--surf);border-radius:20px;
-  padding:14px 16px;margin-bottom:10px;transition:transform .2s var(--ease),background .2s}
-.row:active{transform:scale(.98);background:var(--surf2)}
-.row .ic{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:1.5rem;flex:0 0 auto}
-.row .tx{flex:1;min-width:0}
-.row .tx b{display:block;font-weight:700;font-size:1rem;letter-spacing:-.01em}
-.row .tx span{color:var(--dim);font-size:.82rem}
-.row .ck{color:var(--dim2);font-size:1.1rem}
-.row.done .ck{color:#4fd6a0}
-
-/* halka */
-.ringbox{display:flex;align-items:center;gap:20px;background:var(--surf);border-radius:26px;padding:20px;margin-bottom:22px}
-.ring{width:96px;height:96px;flex:0 0 auto;position:relative}
-.ring svg{transform:rotate(-90deg)}
-.ring .n{position:absolute;inset:0;display:grid;place-items:center;font-size:1.5rem;font-weight:800}
-
-/* çubuk */
-.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
-.bar>i{display:block;height:100%;border-radius:99px;transition:width .7s var(--ease)}
-
-.blk{background:var(--surf);border-radius:24px;padding:18px 20px;margin-bottom:12px}
-.blk h2{margin-bottom:12px}
-.line{display:flex;align-items:center;justify-content:space-between;padding:11px 0;font-size:.95rem}
+.grouphead{font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2);
+  margin:20px 0 9px}
+.bar{height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:7px}
+.bar>i{display:block;height:100%;border-radius:99px;transition:width .6s var(--ease)}
+.blk{background:var(--surf);border-radius:22px;padding:17px 18px;margin-bottom:11px}
+.blk h2{font-size:1rem;margin-bottom:11px}
+.line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:.93rem}
 .line+.line{border-top:1px solid rgba(255,255,255,.06)}
+.chip{background:var(--surf);border-radius:999px;padding:9px 17px;font-weight:700;font-size:.87rem}
+.empty{text-align:center;color:var(--dim2);padding:44px 20px;font-size:.93rem}
 
-/* düğmeler */
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-  background:linear-gradient(135deg,var(--a1),var(--a2));color:#080c1c;font-weight:800;font-size:1.02rem;
-  border-radius:20px;padding:16px;transition:transform .18s var(--ease),filter .2s}
+/* ---------- oyun ekranı ---------- */
+#oyun{background:#05070d;display:flex;flex-direction:column}
+#gtop{position:absolute;top:calc(var(--st) + 12px);left:0;right:0;display:flex;align-items:center;gap:10px;
+  padding:0 14px;z-index:4}
+#gtop .t{flex:1;min-width:0;font-weight:750;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#ghint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + var(--sb));z-index:4;
+  background:rgba(0,0,0,.42);backdrop-filter:blur(10px);padding:9px 18px;border-radius:999px;font-size:.82rem;
+  color:rgba(255,255,255,.85);pointer-events:none;text-align:center;max-width:92vw}
+#gcanvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* ---------- sonuç kartı ---------- */
+#sonuc{position:fixed;inset:0;z-index:20;display:none;align-items:flex-end;justify-content:center;
+  background:rgba(4,6,12,.72);backdrop-filter:blur(10px);padding:16px}
+#sonuc.on{display:flex}
+#sheet{width:100%;max-width:540px;background:linear-gradient(165deg,#1a2038,#0e1322);border-radius:30px;
+  padding:26px 22px calc(24px + var(--sb));text-align:center;animation:up .42s var(--ease)}
+@keyframes up{from{transform:translateY(70px);opacity:0}to{transform:none;opacity:1}}
+#sheet .mark{width:78px;height:78px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;font-size:2.1rem;
+  background:linear-gradient(135deg,var(--a1),var(--a2));color:#06101f;animation:pop .5s var(--ease)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}62%{transform:scale(1.1)}100%{transform:scale(1)}}
+#sheet h3{font-size:1.22rem;font-weight:800;margin-bottom:6px}
+#sheet .fact{font-size:1.06rem;line-height:1.6;color:#dce3ff;background:rgba(255,255,255,.05);
+  border-radius:18px;padding:15px 16px;margin:14px 0 6px;text-align:left}
+#sheet .kelime{display:flex;justify-content:space-between;font-size:.94rem;padding:7px 0;color:#dce3ff}
+#sheet .kelime+.kelime{border-top:1px solid rgba(255,255,255,.07)}
+#sheet .kelime b{color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));color:#06101f;font-weight:800;font-size:1rem;
+  border-radius:18px;padding:15px;transition:transform .18s var(--ease)}
 .btn:active{transform:scale(.97)}
 .btn.soft{background:var(--surf);color:var(--ink)}
-.chips{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
-.chip{background:var(--surf);border-radius:999px;padding:11px 20px;font-weight:700;font-size:.95rem;
-  transition:transform .18s var(--ease),background .2s,color .2s}
-.chip:active{transform:scale(.94)}
-.chip.on{background:var(--ink);color:#0e1120}
 
-/* alt gezinme */
-#nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + var(--safe-b));z-index:30;
-  display:flex;gap:4px;background:rgba(22,26,48,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-radius:999px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
-#nav button{display:flex;align-items:center;gap:7px;border-radius:999px;padding:11px 18px;
-  font-size:.86rem;font-weight:700;color:var(--dim);transition:color .25s,background .3s var(--ease)}
-#nav button.on{color:var(--ink);background:var(--surf2)}
-#nav i{font-style:normal;font-size:1.05rem}
-
-/* ---------- okuyucu ---------- */
-#reader{position:fixed;inset:0;z-index:50;transform:translateY(100%);transition:transform .42s var(--ease);
-  display:flex;flex-direction:column;background:var(--bg)}
-#reader.on{transform:none}
-#rbg{position:absolute;inset:0;transition:background .5s var(--ease)}
-#rbg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,12,24,.15),rgba(10,12,24,.72))}
-#rtop{position:relative;z-index:2;padding:calc(var(--safe-t) + 14px) 18px 0;display:flex;flex-direction:column;gap:12px}
-#segs{display:flex;gap:5px}
-#segs i{flex:1;height:3px;border-radius:9px;background:rgba(255,255,255,.24);overflow:hidden}
-#segs i b{display:block;height:100%;width:0;background:#fff;border-radius:9px;transition:width .35s var(--ease)}
-#rhead{display:flex;align-items:center;gap:12px}
-#rhead .t{flex:1;min-width:0;font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.iconbtn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:1.05rem;flex:0 0 auto;transition:transform .18s var(--ease)}
-.iconbtn:active{transform:scale(.9)}
-
-#rbody{position:relative;z-index:2;flex:1;display:flex;align-items:center;padding:24px 26px calc(30px + var(--safe-b));overflow-y:auto}
-#slide{width:100%;max-width:620px;margin:0 auto;transition:transform .3s var(--ease),opacity .25s var(--ease)}
-#slide .em{font-size:3rem;margin-bottom:18px;display:block}
-#slide .kicker{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:10px}
-#slide .tx{font-size:1.45rem;line-height:1.55;font-weight:600;letter-spacing:-.015em}
-#slide .tx.sm{font-size:1.2rem;font-weight:500;opacity:.95}
-#rtaps{position:absolute;inset:0;z-index:3;display:flex}
-#rtaps>div{flex:1}
-#rfoot{position:relative;z-index:4;padding:0 26px calc(24px + var(--safe-b));max-width:620px;margin:0 auto;width:100%}
-
-/* zamanlayıcı */
-#timer{text-align:center}
-#tring{width:180px;height:180px;margin:6px auto 18px;position:relative}
-#tring svg{transform:rotate(-90deg)}
-#tring .n{position:absolute;inset:0;display:grid;place-items:center;font-size:2.2rem;font-weight:800;font-variant-numeric:tabular-nums}
-
-/* bitiş */
-#done{position:absolute;inset:0;z-index:6;background:rgba(10,12,24,.9);backdrop-filter:blur(14px);
-  display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center}
-#done.on{display:flex;animation:fadein .3s var(--ease)}
-@keyframes fadein{from{opacity:0}to{opacity:1}}
-#done .mark{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-size:2.6rem;
-  background:linear-gradient(135deg,var(--a1),var(--a2));color:#080c1c;animation:pop .5s var(--ease)}
-@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1)}}
-#done h3{font-size:1.4rem;font-weight:800}
-#done .btn{max-width:280px}
-
-#toast{position:fixed;left:50%;bottom:calc(88px + var(--safe-b));transform:translate(-50%,14px);z-index:60;
-  background:var(--ink);color:#0e1120;font-weight:750;font-size:.9rem;padding:12px 20px;border-radius:999px;
-  opacity:0;transition:.32s var(--ease);pointer-events:none;max-width:88vw;text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(88px + var(--sb));transform:translate(-50%,14px);z-index:30;
+  background:var(--ink);color:#080b14;font-weight:750;font-size:.87rem;padding:11px 19px;border-radius:999px;
+  opacity:0;transition:.3s var(--ease);pointer-events:none;max-width:88vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
-
-.empty{text-align:center;color:var(--dim2);padding:50px 20px;font-size:.95rem}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
-<div id="aura"></div>
 
-<!-- KEŞFET -->
-<section class="view on" id="v-kesfet">
+<!-- HARİTA -->
+<section class="scr on" id="s-harita">
+  <canvas id="map"></canvas>
+  <div id="hudTop">
+    <div class="pill" id="lvlPill">⭐ Sv 1</div>
+    <div class="grow"></div>
+    <button class="pill" id="findBtn">🔎 Bul</button>
+  </div>
+  <div id="tip">Sürükleyerek uç · bir alana yaklaş</div>
+  <button id="enter"><span id="enterIc">🚀</span><span id="enterTx">Gir</span></button>
+  <div id="stick"><i></i></div>
+</section>
+
+<!-- ALAN -->
+<section class="scr list" id="s-alan">
   <div class="wrap">
-    <div class="pad">
-      <div class="top">
-        <div class="grow"><h1>Keşfet</h1><div class="sub" id="k-sub">100 konu · kendi hızında</div></div>
-        <button class="pill" id="shuffle">🎲 Rastgele</button>
-      </div>
-      <div class="search">
-        <span>🔍</span><input id="q" placeholder="Konu ara — nefes, odak, uyku…" autocomplete="off">
-      </div>
+    <div class="top">
+      <button class="bk" id="alanBack">←</button>
+      <div class="grow"><h1 id="alanAd">Alan</h1><div class="sub" id="alanSub"></div></div>
     </div>
-    <div id="rails"></div>
-    <div class="pad" id="results" style="display:none"></div>
+    <div class="bar" style="margin-bottom:16px"><i id="alanBar"></i></div>
+    <div id="konuList"></div>
   </div>
 </section>
 
-<!-- BUGÜN -->
-<section class="view" id="v-bugun">
-  <div class="wrap pad">
-    <div class="top"><div class="grow"><h1>Bugün</h1><div class="sub" id="b-sub">Üç küçük adım yeter</div></div></div>
-    <div class="ringbox">
-      <div class="ring">
-        <svg width="96" height="96"><circle cx="48" cy="48" r="41" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="9"/>
-        <circle id="dayRing" cx="48" cy="48" r="41" fill="none" stroke="url(#g1)" stroke-width="9" stroke-linecap="round" stroke-dasharray="258" stroke-dashoffset="258"/>
-        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8ff"/><stop offset="1" stop-color="#b18cff"/></linearGradient></defs></svg>
-        <div class="n" id="dayNum">0</div>
-      </div>
-      <div style="flex:1">
-        <h2 id="streakTxt">Seri: 0 gün</h2>
-        <div class="sub" id="dayTxt">Bugün 0 / 3 keşif</div>
-        <div class="bar"><i id="dayBar" style="width:0;background:linear-gradient(90deg,#6ea8ff,#b18cff)"></i></div>
-      </div>
-    </div>
-    <h2 style="margin:6px 0 12px">Senin için</h2>
-    <div id="picks"></div>
-    <button class="btn soft" id="newPicks" style="margin-top:6px">↻ Başka öner</button>
+<!-- LİSTE -->
+<section class="scr list" id="s-liste">
+  <div class="wrap">
+    <div class="top"><div class="grow"><h1>Alanlar</h1><div class="sub" id="listeSub"></div></div></div>
+    <div class="search"><span>🔎</span><input id="q" placeholder="Uçak, tıp, İngilizce, şınav…" autocomplete="off"></div>
+    <div id="alanList"></div>
   </div>
 </section>
 
 <!-- BEN -->
-<section class="view" id="v-ben">
-  <div class="wrap pad">
+<section class="scr list" id="s-ben">
+  <div class="wrap">
     <div class="top"><div class="grow"><h1>Ben</h1><div class="sub" id="lvlTxt">Seviye 1</div></div></div>
     <div class="blk">
-      <div style="display:flex;justify-content:space-between;font-size:.9rem;color:var(--dim)">
-        <span id="xpTxt">0 XP</span><span id="nextTxt">100 XP’de seviye 2</span></div>
-      <div class="bar"><i id="xpBar" style="width:0;background:linear-gradient(90deg,#6ea8ff,#b18cff)"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:.86rem;color:var(--dim)">
+        <span id="xpTxt">0 XP</span><span id="nextTxt"></span></div>
+      <div class="bar"><i id="xpBar" style="background:linear-gradient(90deg,#6ea8ff,#b18cff)"></i></div>
       <div class="line" style="border-top:1px solid rgba(255,255,255,.06);margin-top:8px">
-        <span>Tamamlanan konu</span><b id="stDone">0 / 100</b></div>
-      <div class="line"><span>En uzun seri</span><b id="stBest">0 gün</b></div>
-      <div class="line"><span>Odak süresi</span><b id="stMin">0 dk</b></div>
+        <span>Tamamlanan konu</span><b id="stDone">0 / 1000</b></div>
+      <div class="line"><span>Kazanılan oyun</span><b id="stWin">0</b></div>
+      <div class="line"><span>Seri</span><b id="stStreak">0 gün</b></div>
     </div>
-    <div class="blk"><h2>Alanların</h2><div id="catbars"></div></div>
+    <div class="blk"><h2>Gruplar</h2><div id="grpBars"></div></div>
     <div class="blk"><h2>Ayarlar</h2>
       <div class="line"><span>Ses</span><button class="chip" id="sndBtn">Açık</button></div>
-      <div class="line"><span>Tüm ilerlemeyi sıfırla</span><button class="chip" id="resetBtn">Sıfırla</button></div>
+      <div class="line"><span>İlerlemeyi sıfırla</span><button class="chip" id="resetBtn">Sıfırla</button></div>
     </div>
   </div>
 </section>
 
+<!-- OYUN -->
+<section class="scr" id="oyun">
+  <canvas id="gcanvas"></canvas>
+  <div id="gtop">
+    <button class="bk" id="gBack" style="background:rgba(0,0,0,.4)">←</button>
+    <div class="t" id="gTitle"></div>
+    <button class="bk" id="gRetry" style="background:rgba(0,0,0,.4)">↻</button>
+  </div>
+  <div id="ghint"></div>
+</section>
+
 <nav id="nav">
-  <button class="on" data-v="kesfet"><i>🧭</i>Keşfet</button>
-  <button data-v="bugun"><i>☀️</i>Bugün</button>
-  <button data-v="ben"><i>🌱</i>Ben</button>
+  <button class="on" data-s="harita"><span>🗺️</span>Harita</button>
+  <button data-s="liste"><span>📚</span>Alanlar</button>
+  <button data-s="ben"><span>🌱</span>Ben</button>
 </nav>
 
-<!-- OKUYUCU -->
-<div id="reader">
-  <div id="rbg"></div>
-  <div id="rtop">
-    <div id="segs"></div>
-    <div id="rhead"><div class="t" id="rtitle"></div><button class="iconbtn" id="rclose">✕</button></div>
-  </div>
-  <div id="rbody">
-    <div id="rtaps"><div data-d="-1"></div><div data-d="1"></div></div>
-    <div id="slide"></div>
-  </div>
-  <div id="rfoot"></div>
-  <div id="done">
-    <div class="mark">✓</div>
-    <h3 id="doneT">Tamamlandı</h3>
-    <div class="sub" id="doneS"></div>
-    <button class="btn" id="doneNext" style="margin-top:8px">Sıradaki konu</button>
-    <button class="btn soft" id="doneClose">Kapat</button>
-  </div>
-</div>
-
+<div id="sonuc"><div id="sheet"></div></div>
 <div id="toast"></div>
 
+<script src="data-alan.js?v=3"></script>
+<script src="data-spor.js?v=3"></script>
+<script src="data-dil.js?v=3"></script>
+<script src="games.js?v=3"></script>
 <script>
-/* ============ KATEGORİLER ============ */
-const CATS=[
- {id:'zihin',   n:'Zihin & Odak',      e:'🧠', a:'#6ea8ff', b:'#3f6bff'},
- {id:'beden',   n:'Beden & Sağlık',    e:'💪', a:'#56dfa6', b:'#16a97a'},
- {id:'duygu',   n:'Duygular',          e:'💗', a:'#ff92b8', b:'#ef4f80'},
- {id:'ogren',   n:'Öğrenme',           e:'📚', a:'#ff9f7a', b:'#f0603c'},
- {id:'uretim',  n:'Üretkenlik',        e:'⚡', a:'#b18cff', b:'#7a3ffb'},
- {id:'iletisim',n:'İletişim',          e:'🗣️', a:'#5fd9e6', b:'#16a8bf'},
- {id:'para',    n:'Para',              e:'💰', a:'#ffd873', b:'#e3a415'},
- {id:'yarat',   n:'Yaratıcılık',       e:'🎨', a:'#f79bff', b:'#c23df0'},
- {id:'uyku',    n:'Uyku & Dinlenme',   e:'🌙', a:'#8fa0f0', b:'#3f45a8'},
- {id:'karakter',n:'Karakter & Anlam',  e:'🧭', a:'#a3d977', b:'#5aa02c'},
+/* ============ VERİYİ BİRLEŞTİR ============ */
+const ALAN = [
+  ...ALANLAR,
+  ...SPOR_ALANLAR,
+  ...DILLER.map(d => ({id: 'dil_' + d.id, n: d.n, e: d.e, g: 'dil', skin: 'word', a: d.a, b: d.b, grp: 'Dil'}))
 ];
-const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
-
-/* ============ 100 KONU ============ */
-/* [kategori, başlık, emoji, 'kart1|kart2|kart3', 'pratik'] */
-const TOPICS=[
-/* — Zihin & Odak — */
-['zihin','Derin Odak','🎯','Derin odak, zihnin tek bir işe tamamen gömüldüğü hâldir; günün en verimli saatleri oradadır.|Odak bir düğme gibi anında açılmaz — ısınması ortalama 15-20 dakika sürer.|Bölünen bir işe dönüp kaldığın yeri bulmak, işin kendisinden daha çok enerji yakar.','Telefonu başka bir odaya bırak, tek bir iş seç ve süreyi kendin belirle. Bitince nasıl hissettiğini bir cümleyle yaz.'],
-['zihin','Dikkat Dağınıklığı','🌀','Dikkatin dağılması karakter zayıflığı değil, ortamın tasarımıyla ilgili bir sonuçtur.|Bildirimler dikkati yalnızca o an değil, sonraki dakikalarda da geri çeker.|Zihin boşluğu sevmez; ne yapacağını bilmediğinde en kolay uyarana kaçar.','Çalışma alanındaki üç dikkat dağıtıcıyı bul ve kaldır. Sonra sessiz ortamda tek işe otur.'],
-['zihin','Pomodoro','⏱️','Belirli bir süre çalışıp kısa mola vermek, zihni yormadan sürekliliği korur.|Süre bitişini bilmek beynin direncini azaltır: "sonu var" düşüncesi başlamayı kolaylaştırır.|Molada ekrana bakmak dinlenme sayılmaz; gözün ve zihnin uzağa bakması gerekir.','Bir süre seç, o süre boyunca yalnızca tek işi yap. Bitince ayağa kalk ve uzağa bak.'],
-['zihin','Tek İşe Odaklan','1️⃣','Çoklu görev bir yanılsamadır; beyin işler arasında hızlıca geçiş yapar ve her geçişte kaybeder.|İki işi aynı anda yapmak, ikisini de ortalama kalitede bitirmenin en garantili yoludur.|Sıra ile yapılan işler, aynı anda yapılanlardan çoğu zaman daha hızlı biter.','Bugün yapacağın işleri sırala. Sadece ilkini aç, diğer sekmeleri kapat ve bitene kadar dönme.'],
-['zihin','Zihin Bulanıklığı','🌫️','Zihin bulanıklığı çoğu zaman uykusuzluk, susuzluk ya da fazla karar yükünün habercisidir.|Kafandaki her açık döngü — hatırlaman gereken her şey — bir miktar dikkat tüketir.|Yazmak, zihni boşaltmanın en hızlı yoludur; kâğıt senin yerine hatırlar.','Aklındaki her şeyi 3 dakika boyunca durmadan yaz. Sonra sadece bir tanesini seç ve onu yap.'],
-['zihin','Meditasyon','🧘','Meditasyon zihni boşaltmak değil, dağıldığını fark edip nazikçe geri dönmektir.|Dağılmak başarısızlık değil, egzersizin ta kendisidir; her dönüş bir tekrardır.|Kısa ve düzenli oturuşlar, seyrek ve uzun olanlardan daha çok işe yarar.','Otur, gözlerini kapat, nefesini say. Dikkatin kaçınca yargılamadan nefese dön.'],
-['zihin','Farkındalık','🍃','Farkındalık, olanı değiştirmeye çalışmadan olduğu gibi görebilmektir.|Zihnin çoğu zaman ya geçmişte ya gelecekte gezinir; şimdiki an nadiren ziyaret edilir.|Sıradan bir işi tam dikkatle yapmak da bir farkındalık pratiğidir.','Bir bardak suyu tamamen dikkatle iç: sıcaklığını, sesini, tadını fark et. Sonra bunu bir işe taşı.'],
-['zihin','Dijital Detoks','📵','Telefon kötü değildir; kontrolsüz kullanım dikkati parçalara ayırır.|Ekranı elinden bırakınca gelen huzursuzluk geçicidir, genellikle birkaç dakika sürer.|Uygulamayı silmek yerine sürtünme eklemek de işe yarar: çıkış yap, ana ekrandan kaldır.','Telefonu belirlediğin süre boyunca uzağa koy ve o sürede ekransız bir şey yap.'],
-['zihin','Hafıza Teknikleri','🗂️','Beyin listeleri değil, görüntüleri ve mekânları hatırlamakta iyidir.|Bilgiyi bildiğin bir şeye bağladığında hatırlaman kolaylaşır.|Abartılı, tuhaf ve hareketli görüntüler akılda daha uzun kalır.','Hatırlaman gereken 5 şeyi evinin odalarına yerleştir. Zihninde evde yürüyerek tekrar et.'],
-['zihin','Zihin Haritası','🗺️','Zihin haritası düşünceyi satır satır değil, dallanarak yazma biçimidir.|Ortadan dışa doğru yazmak, bağlantıları listelerden daha hızlı görünür kılar.|Renk ve kısa kelimeler, uzun cümlelerden daha iyi hatırlanır.','Bir konuyu ortaya yaz, etrafına 5 dal çıkar, her dala 3 kelime ekle.'],
-/* — Beden & Sağlık — */
-['beden','Nefes Egzersizi','🌬️','Nefes, otomatik çalışan ama bilinçli değiştirebildiğin nadir sistemlerden biridir.|Nefes verişi uzatmak bedene "güvendesin" sinyali gönderir ve sakinleştirir.|Göğüsten değil karından nefes almak, akciğerin alt kısmını da devreye sokar.','4 sayarak al, 6 sayarak ver. Elini karnına koy ve karnının hareketini izle.'],
-['beden','Sabah Hareketi','🌅','Günün ilk hareketi, bedeni uykudan güne geçirir; kahveden daha hızlı uyandırır.|Şiddet değil süreklilik önemlidir — 5 dakika sıfırdan çok daha iyidir.|Sabah hareketi gün içindeki hareket isteğini de artırır.','Yataktan kalkar kalkmaz esne, omuz çevir, birkaç squat yap. Süreyi kendin seç.'],
-['beden','Duruş','🧍','Kambur duruş sadece görünüm değil, nefes kapasitesi ve ruh hâli meselesidir.|Vücut uzun süre aynı pozisyonda kalmaktan yorulur; en iyi duruş bir sonraki duruştur.|Ekranı göz hizasına almak, boyundaki yükü belirgin biçimde azaltır.','Otur, omuzlarını geriye ve aşağıya bırak, çeneyi hafif içeri al. Bu duruşta nefes al.'],
-['beden','Su İçme','💧','Hafif susuzluk bile odak, ruh hâli ve enerji üzerinde hissedilir etki yapar.|Susama hissi geciken bir alarmdır; genelde ihtiyaç başladıktan sonra gelir.|Göz önündeki bir bardak, hatırlatıcıdan daha etkili çalışır.','Bir bardak su doldur, görebileceğin yere koy ve bitene kadar burada kal.'],
-['beden','Yürüyüş','🚶','Yürümek hem bedeni hem zihni çalıştıran en erişilebilir egzersizdir.|Tıkandığın bir konuda yürüyüş, masada oturmaktan daha çok fikir üretir.|Yemek sonrası kısa yürüyüş, sindirimi ve kan şekerini rahatlatır.','Dışarı çık ve belirlediğin süre boyunca yürü. Telefon cepte, gözler etrafta kalsın.'],
-['beden','Esneme','🤸','Esneklik yaşla değil, kullanmamakla kaybedilir.|Esnerken acıya değil, hafif gerilme hissine kadar gitmek yeterlidir.|Nefes vererek esnemek, kasın bırakmasını kolaylaştırır.','Boyun, omuz, kalça ve arka bacak için sırayla esne. Her birinde yavaş nefes ver.'],
-['beden','Güç Antrenmanı','🏋️','Kas yalnız güç değil; metabolizma, duruş ve yaşlılıkta bağımsızlık demektir.|Kendi vücut ağırlığın, ekipmansız başlamak için fazlasıyla yeterlidir.|Kas dinlenirken büyür; her gün aynı bölgeyi çalıştırmak gelişmeyi yavaşlatır.','Şınav, squat ve plank’tan oluşan bir tur yap. Zorlandığın yerde formu boz, sayıyı değil.'],
-['beden','Sağlıklı Tabak','🥗','İyi bir tabak yasak listesiyle değil, oranlarla kurulur.|Tabağın yarısı sebze, çeyreği protein, çeyreği tam tahıl basit ve işe yarar bir kuraldır.|Renk çeşitliliği, farklı besin çeşitliliğinin en kolay göstergesidir.','Bir sonraki öğününü tabakta böl: yarısı sebze olsun. Yavaş ye ve doyduğunu fark et.'],
-['beden','Şeker Dengesi','🍬','Ani şeker yükselişi, biraz sonra gelen ani düşüşün ve yorgunluğun sebebidir.|Şekeri protein veya lifle birlikte almak yükselişi yumuşatır.|Şeker isteği çoğu zaman açlıktan değil, uykusuzluk ve stresten gelir.','Bugün tatlı isteği geldiğinde önce su iç ve 10 dakika bekle. Sonra kararını ver.'],
-['beden','Soğuk Duş','🚿','Soğuk suya kısa maruz kalmak, uyanıklık ve tazelik hissini hızla artırır.|Asıl kazanç suyun kendisinde değil, rahatsızlığa kalarak verilen karardadır.|Duşu son 30 saniyede soğutmak başlamak için yeterlidir.','Duşun sonunda suyu soğut ve nefesini kontrol ederek kal. Süreyi kendin belirle.'],
-/* — Duygular — */
-['duygu','Duyguyu Adlandırma','🏷️','Bir duyguya isim vermek, onun şiddetini gözle görülür biçimde azaltır.|"Kötüyüm" belirsizdir; "hayal kırıklığına uğradım" ise üzerinde çalışılabilir.|Duygular misafirdir: gelir, kalır, gider. Kovmaya çalışmak kalış süresini uzatır.','Şu an hissettiğin duyguya tek kelimeyle isim ver, sonra "çünkü…" diye tamamla.'],
-['duygu','Kaygıyla Baş Etme','😰','Kaygı geleceğe dair bir tahmin, tehlike değil bir alarmdır.|Beden sakinleşmeden zihin sakinleşmez; önce nefes, sonra düşünce.|"Ya olursa?" sorusunun yanında "olursa ne yaparım?" sorusu kaygıyı küçültür.','Kaygını yaz, sonra altına "gerçekten olursa atacağım ilk adım" yaz. Nefesini yavaşlat.'],
-['duygu','Öfke Yönetimi','🔥','Öfke genelde ihlal edilen bir sınırın habercisidir; mesajı vardır.|Öfkenin fiziksel dalgası birkaç dakikada zirve yapıp düşer; karar o düşüşten sonra verilir.|Bastırmak da patlamak da işe yaramaz; üçüncü yol ifade etmektir.','Öfkeyi hissettiğinde ortamdan kısa süre uzaklaş, nefes ver, sonra ne istediğini tek cümlede söyle.'],
-['duygu','Öz Şefkat','🤍','Kendine bir arkadaşına konuştuğun gibi konuşmak, katılıktan daha çok işe yarar.|Öz şefkat mazeret üretmek değil, hatadan sonra ayağa kalkma süresini kısaltmaktır.|Herkes zorlanır — bu bilgi yalnızlığı azaltır.','Kendine söylediğin sert bir cümleyi yaz. Altına bir dostuna söyleyeceğin hâlini yaz.'],
-['duygu','Şükran','🙏','Zihin tehdit aramaya programlıdır; iyiyi görmek bilinçli bir çabadır.|Genel değil, spesifik şeylere şükretmek etkisini artırır.|Şükran sorunları yok saymak değil, aynı anda iyiyi de görebilmektir.','Bugüne ait üç küçük iyi şey yaz — mümkün olduğunca ayrıntılı olsun.'],
-['duygu','Hayal Kırıklığı','🌧️','Hayal kırıklığı, beklenti ile gerçek arasındaki farkın adıdır.|Acısı, umursadığının kanıtıdır; umursamasan hissetmezdin.|Beklentiyi gözden geçirmek, gerçeği inkâr etmekten daha az yorucudur.','Beklentini ve gerçekleşeni yan yana yaz. Aradaki farktan öğrendiğin tek şeyi belirle.'],
-['duygu','Yalnızlık','🌑','Yalnızlık, kalabalıkta da hissedilebilir; mesele sayı değil bağ kalitesidir.|Yalnızlık bir eksiklik göstergesi değil, bağ kurma ihtiyacının sinyalidir.|İlk adımı atmak zordur ama çoğu insan da aynı adımı bekliyordur.','Uzun süredir konuşmadığın birine kısa bir mesaj yaz ve gönder.'],
-['duygu','Kıskançlık','💚','Kıskançlık çoğu zaman senin gerçek isteğini gösteren bir pusuladır.|Kimi kıskandığın, ne istediğini kendinden daha net söyler.|Karşılaştırma kaçınılmazdır; kime karşı yaptığın ise seçimdir.','Kıskandığın kişiyi ve tam olarak neyini kıskandığını yaz. Ona giden ilk küçük adımı belirle.'],
-['duygu','Utanç ve Suçluluk','🪞','Suçluluk "yaptığım şey kötü", utanç "ben kötüyüm" der; ikisi çok farklıdır.|Suçluluk davranışı düzeltir, utanç saklanmaya iter.|Utançla baş etmenin yolu güvendiğin birine anlatmaktır.','Utandığın bir şeyi yaz, sonra onu davranış diline çevir: "ben…" yerine "yaptığım…".'],
-['duygu','Duygusal Dayanıklılık','🛡️','Dayanıklılık hiç sarsılmamak değil, sarsıldıktan sonra toparlanabilmektir.|Toparlanma hızını uyku, hareket ve bağ kurma belirgin biçimde artırır.|Zorlukları anlamlandırabilenler, aynı zorluktan daha az hasarla çıkar.','Atlattığın bir zorluğu ve o dönemde seni ayakta tutan şeyi yaz. O şeyi bugün tekrar kullan.'],
-/* — Öğrenme — */
-['ogren','Aralıklı Tekrar','🔁','Unutma normaldir; tekrar tam unutmaya yakın yapıldığında en çok işe yarar.|Aynı gün 5 kez tekrar etmek, 5 güne yayılmış 5 tekrardan zayıftır.|Aralıkları giderek açmak bilgiyi uzun süreli belleğe taşır.','Bugün öğrendiğin 5 şeyi yaz. Yarın, 3 gün sonra ve 1 hafta sonra tekrar bak.'],
-['ogren','Aktif Hatırlama','🧩','Okumak tanıdıklık yaratır, hatırlamaya çalışmak ise öğrenme yaratır.|Zorlanmadan yapılan tekrar, çoğu zaman öğrenme yanılsamasıdır.|Kendine soru sormak, not okumaktan kat kat etkilidir.','Kitabı kapat ve öğrendiklerini boş sayfaya yaz. Sonra açıp eksikleri karşılaştır.'],
-['ogren','Feynman Tekniği','👨‍🏫','Bir şeyi çocuğa anlatabiliyorsan gerçekten anlamışsındır.|Anlatırken tökezlediğin yer, tam olarak eksik olduğun yerdir.|Karmaşık terimler çoğu zaman anlamayı değil, anlamamayı gizler.','Bir konuyu sesli anlat, sanki karşında hiç bilmeyen biri var. Takıldığın yeri not et.'],
-['ogren','Yeni Dil','🗣️','Dil öğrenmek bilgi değil alışkanlık işidir; her gün 10 dakika, haftada bir saatten iyidir.|Hata yapmadan konuşmayı beklemek, konuşmayı hiç başlatmamak demektir.|Anlamı bağlamdan çıkarmak, tek tek kelime ezberlemekten kalıcıdır.','Bugün öğrendiğin dilde 5 cümle kur ve sesli söyle. Bilmediğin kelimeyi anlatarak geç.'],
-['ogren','Okuma Alışkanlığı','📖','Okuma hızından çok süreklilik önemlidir; her gün birkaç sayfa yılda bir raf eder.|Sevmediğin kitabı bırakmak, okuma alışkanlığını kurtarır.|Not alarak okumak, okunanı iki kat daha uzun hatırlatır.','Kitabı aç ve süre bitene kadar oku. Bitince aklında kalan tek fikri yaz.'],
-['ogren','Not Alma','✍️','İyi not, konuşmanın kopyası değil, kendi cümlelerinle özetidir.|Notu sonra kullanacaksan, ileride arayacağın kelimeyle etiketle.|Az ama işlenmiş not, çok ama kopyalanmış nottan değerlidir.','Son öğrendiğin şeyi 3 madde hâlinde kendi cümlelerinle yaz.'],
-['ogren','Hata Defteri','📕','Hatalar, doğru cevaplardan daha fazla bilgi taşır.|Aynı hatayı tekrar etmenin sebebi genelde onu kaydetmemektir.|Hata defteri, sınav öncesi en verimli tekrar kaynağıdır.','Bugün yaptığın bir hatayı, sebebini ve bir dahakine ne yapacağını yaz.'],
-['ogren','Matematik Sezgisi','➗','Matematik ezber değil, örüntü görme becerisidir.|Zorlandığın yer genelde bir önceki basamağın eksikliğidir.|Sayıyı yuvarlayarak zihinden tahmin etmek, sezgiyi hızla geliştirir.','Günlük bir hesabı (market, süre, mesafe) kâğıtsız tahmin et, sonra kontrol et.'],
-['ogren','Merak','🔍','Merak, öğrenmenin motorudur; zorlama disiplinden daha uzun gider.|Soru sormak cehalet değil, öğrenmenin başlangıç adımıdır.|"Neden böyle?" sorusu, ezberi anlamaya çevirir.','Bugün dikkatini çeken bir şeye "neden böyle?" diye sor ve cevabını araştır.'],
-['ogren','Öğrenmeyi Öğrenme','🎓','Nasıl öğrendiğini bilmek, ne öğrendiğinden daha uzun süre işine yarar.|Zorlanma hissi çoğu zaman öğrenmenin gerçekleştiğinin işaretidir.|Konuları karıştırarak çalışmak, blok blok çalışmaktan daha kalıcıdır.','Son çalıştığın konuda hangi yöntemin işe yaradığını yaz ve bir sonrakinde onu kullan.'],
-/* — Üretkenlik — */
-['uretim','Sabah Rutini','☀️','Sabah rutini günü kurtarmaz ama günün ilk kararını senin lehine alır.|Karmaşık rutinler bozulur; 3 adımlık rutinler yaşar.|Telefonla başlayan gün, başkasının önceliğiyle başlar.','Yarın sabah için 3 adımlık basit bir rutin yaz ve ilkini şimdi prova et.'],
-['uretim','Yapılacaklar Listesi','✅','Uzun liste motivasyonu düşürür; günde 3 gerçek madde çoğu zaman yeterlidir.|Madde belirsizse ertelenir: "rapor" değil, "raporun girişini yaz".|Bitenleri görmek, kalanları yapma isteğini artırır.','Bugün için sadece 3 net madde yaz. Her birini fiil ile başlat.'],
-['uretim','Erteleme','🐌','Erteleme tembellik değil, çoğu zaman kaygı veya belirsizlikten kaçıştır.|İşin ilk 2 dakikası, tamamından daha büyük bir engeldir.|"Mükemmel başlayayım" düşüncesi, başlamamanın en kibar hâlidir.','Ertelediğin işi gülünç derecede küçült ve sadece o küçük parçayı şimdi yap.'],
-['uretim','2 Dakika Kuralı','⏳','İki dakikadan kısa süren iş, listeye yazılmadan hemen yapılır.|Küçük işler biriktiğinde zihinsel yükü büyür.|Yeni alışkanlıklar da 2 dakikalık hâliyle başlatıldığında tutar.','Etrafında iki dakikadan kısa süren üç işi bul ve şimdi bitir.'],
-['uretim','Zaman Bloklama','📅','Yapılacak listesi işleri sayar; takvim ise onlara yer açar.|Bir işe zaman ayırmadan yapılacağını ummak, en yaygın planlama hatasıdır.|Aralara boşluk bırakmayan planlar ilk aksaklıkta çöker.','Yarının takvimine tek bir iş için net saat aralığı yaz ve o saatte sadece onu yap.'],
-['uretim','Enerji Yönetimi','🔋','Zaman herkeste eşittir; fark enerjinin nereye harcandığındadır.|Herkesin zirve saati farklıdır; zor işi o saate koymak en büyük kazançtır.|Yorgunken alınan kararlar, ertesi gün genelde yeniden alınır.','Günün en zinde olduğun saatini belirle ve en zor işi oraya taşı.'],
-['uretim','Hayır Diyebilmek','✋','Her "evet", farkında olmadan başka bir şeye söylenmiş "hayır"dır.|Nazik bir hayır, geciktirilmiş ve yapılmayan bir evetten daha dürüsttür.|Sebep uzatmak gerekmez; kısa ve net cevap daha rahat karşılanır.','Bugün gelen bir isteğe nazikçe hayır de: "Şu an buna zaman ayıramam."'],
-['uretim','Dağınıklığı Azalt','🧹','Dağınık alan, göz her gezindiğinde küçük bir karar yükü üretir.|Eşyanın yeri olduğunda toplamak iş olmaktan çıkar.|Az eşya, az bakım ve az karar demektir.','Tek bir yüzeyi tamamen boşalt. Sadece orayı temiz tut.'],
-['uretim','Haftalık Değerlendirme','🗓️','Plan yapmadan koşmak, yönü kontrol etmeden hızlanmaktır.|Haftada 15 dakikalık bakış, saatlerce boşa giden işi önler.|"Ne işe yaradı, ne yaramadı" iki sorusu çoğu zaman yeterlidir.','Bu hafta işe yarayan bir şeyi ve yaramayan bir şeyi yaz. Gelecek hafta için tek değişiklik seç.'],
-['uretim','Küçük Adımlar','🐜','Büyük hedefler ilham verir, küçük adımlar taşır.|Her gün %1, bir yılda çarpıcı bir farka dönüşür.|Adım küçüldükçe başlama direnci de küçülür.','Büyük hedefini bugün yapılabilecek en küçük parçaya böl ve o parçayı yap.'],
-/* — İletişim — */
-['iletisim','Etkin Dinleme','👂','Çoğu insan dinlemez, sırasını bekler; fark hemen hissedilir.|Dinlemenin işareti, karşındakinin söylediğini kendi cümlenle özetleyebilmendir.|Sessizliğe dayanabilmek, iyi dinleyicinin en güçlü aracıdır.','Bir konuşmada hiç akıl vermeden dinle, sonra "yani şunu mu diyorsun…" diye özetle.'],
-['iletisim','Göz Teması','👀','Göz teması güven kurar ama sabit bakış rahatsız eder; doğal aralıklar gerekir.|Konuşurken değil, dinlerken kurulan göz teması daha güçlü etki bırakır.|Zorlanıyorsan kaşların arasına bakmak yeterince doğal görünür.','Bugün üç konuşmada dinlerken göz temasını koru ve etkisini fark et.'],
-['iletisim','Beden Dili','🙆','Söz ile beden çeliştiğinde insanlar bedene inanır.|Açık duruş — kapalı olmayan kollar — güven sinyali verir.|Karşındakinin duruşunu hafifçe yansıtmak yakınlık hissini artırır.','Bir konuşmada omuzlarını aç, ellerini görünür tut ve farkı gözlemle.'],
-['iletisim','Küçük Sohbet','💬','Küçük sohbet yüzeyseldir ama derin ilişkilerin kapısıdır.|En kolay başlangıç, ortak durumdan bir gözlem paylaşmaktır.|Açık uçlu sorular sohbeti akıtır; "evet/hayır" soruları durdurur.','Bugün tanımadığın biriyle iki cümlelik bir sohbet başlat.'],
-['iletisim','Sınır Koymak','🚧','Sınır, insanları uzaklaştırmak için değil ilişkiyi sürdürebilmek için konur.|Sınırsız ilişkiler, biriken kızgınlıkla sona erer.|Sınır suçlamayla değil, ihtiyaç diliyle söylenir.','"Ben … ihtiyacım var, bu yüzden …" kalıbıyla bir sınır cümlesi yaz ve söyle.'],
-['iletisim','Geri Bildirim','🎁','İyi geri bildirim kişiyi değil davranışı konu alır.|Somut örnek olmadan verilen geri bildirim, eleştiri gibi hissedilir.|Ne yapılacağını söylemek, ne yapılmadığını söylemekten daha yararlıdır.','Birine "şunu yaptığında şu oldu, bir dahakine şöyle olabilir" kalıbıyla geri bildirim ver.'],
-['iletisim','Özür Dilemek','🤝','"Ama" kelimesiyle devam eden özür, özür olmaktan çıkar.|İyi özür üç parçalıdır: ne yaptım, etkisi ne oldu, ne yapacağım.|Geç kalmış özür, hiç yapılmamış özürden iyidir.','Kırdığını düşündüğün birine üç parçalı bir özür cümlesi hazırla.'],
-['iletisim','Topluluk Önünde Konuşma','🎤','Heyecan düşman değil; bedenin seni hazırlama biçimidir.|İlk cümleyi ezberlemek, başlangıç paniğini büyük ölçüde bitirir.|Slaytı değil insanları anlatmak, ilgiyi canlı tutar.','Anlatacağın bir konunun ilk cümlesini yaz ve sesli olarak üç kez tekrar et.'],
-['iletisim','Çatışma Çözme','⚖️','Çatışmada amaç kazanmak değil, ortak bir çözüme varmaktır.|Pozisyonlar çatışır, ihtiyaçlar genelde uzlaşır.|"Haklıyım" ile başlayan konuşma, dinlenmeden biter.','Bir anlaşmazlıkta karşı tarafın ihtiyacını tahmin ederek yaz, sonra ona sor.'],
-['iletisim','Empati','💞','Empati aynı fikirde olmak değil, hissi anlamaya çalışmaktır.|"Anlıyorum" demek yerine ne anladığını söylemek daha inandırıcıdır.|Çözüm sunmadan önce duyulduğunu hissettirmek gerekir.','Birinin anlattığı bir zorluğu dinle ve sadece "zor olmuş" de, çözüm önerme.'],
-/* — Para — */
-['para','Bütçe','🧾','Bütçe kısıtlama değil, paranın nereye gittiğini görme aracıdır.|Görünmeyen harcamalar, en çok yekûn tutan harcamalardır.|Bir ay kayıt tutmak, çoğu insanda alışkanlığı kendiliğinden değiştirir.','Son 7 günün harcamalarını yaz ve üç kategoriye ayır: zorunlu, keyif, gereksiz.'],
-['para','Acil Durum Fonu','🏦','Acil fon, kötü günlerde kötü kararlar almanı engelleyen tampondur.|Küçük başlamak, hiç başlamamaktan sonsuz kat iyidir.|Ulaşması kolay ama harcaması zor bir yerde durmalıdır.','Bir sonraki gelirinde ayıracağın küçük bir tutarı belirle ve ayrı bir yere not et.'],
-['para','Tasarruf Alışkanlığı','🐷','Tasarruf iradeyle değil, otomatikleştirmeyle sürdürülür.|Önce kendine ayırıp kalanla yaşamak, kalanı biriktirmekten etkilidir.|Küçük ve düzenli, büyük ve ara sıra olandan güçlüdür.','Gelirinin küçük bir yüzdesini belirle ve elde ettiğin an ayırmayı kural yap.'],
-['para','Bilinçli Harcama','🛒','Harcama kötü değildir; değer vermediğin şeye harcamak sorundur.|Bekleme süresi koymak, dürtüsel alışverişin çoğunu eritir.|Fiyatı saat olarak düşünmek kararı netleştirir: bu kaç saatlik emeğim?','Almak istediğin bir şey için 48 saat bekle, sonra hâlâ istiyor musun bak.'],
-['para','Borçtan Çıkış','⛓️','Borç, gelecekteki emeğini bugüne taşımaktır; faiz de bunun bedelidir.|Tüm borçları listelemek, belirsizlik kaygısını hemen azaltır.|En küçük borcu kapatmak, motivasyon açısından hızlı kazanç sağlar.','Borçlarını tutar sırasıyla yaz ve en küçüğü kapatmak için bir plan cümlesi kur.'],
-['para','Bileşik Faiz','📈','Bileşik büyüme, kazancın da kazanmaya başlamasıdır.|En büyük değişkeni oran değil, süredir; erken başlamak her şeyi değiştirir.|Aynı mantık borçta ters yönde çalışır.','Küçük bir tutarın uzun sürede nasıl büyüdüğünü kâğıtta hesapla ve gör.'],
-['para','Finansal Okuryazarlık','🌱','Gelir, gider, varlık ve borç — dört kavram finansal tablonun tamamıdır.|Anlamadığın bir ürüne para bağlamamak temel bir korunma kuralıdır.|Getiri vaadi büyüdükçe risk de büyür; bu ikisi ayrılmaz.','Bilmediğin bir finans terimini araştır ve kendi cümlenle bir satırda tanımla.'],
-['para','Fatura Düzeni','📄','Düzensiz ödemeler gecikme bedeliyle sessizce para sızdırır.|Tüm sabit giderleri tek listede görmek, iptal edilecekleri ortaya çıkarır.|Aynı güne toplanan ödemeler takibi kolaylaştırır.','Sabit giderlerini listele ve kullanmadığın bir aboneliği bul.'],
-['para','Gelir Çeşitlendirme','🔀','Tek gelir kaynağı, tek bacaklı sandalye gibidir.|Yeni gelir çoğu zaman mevcut becerinin başka bir kitleye sunulmasıdır.|Küçük ve düzenli ek gelir, büyük ve belirsiz olandan güvenlidir.','Bildiğin bir beceriyi yaz ve onunla kime nasıl fayda sağlayabileceğini düşün.'],
-['para','Para Psikolojisi','🎭','Para kararları tabloyla değil, çoğu zaman duyguyla verilir.|Parayla ilişkin, çocuklukta gördüğün örneklerden büyük ölçüde etkilenir.|Yeterlilik duygusu rakamla değil, netlikle gelir.','Parayla ilgili ilk hatırladığın anıyı yaz ve bugünkü alışkanlığınla bağını kur.'],
-/* — Yaratıcılık — */
-['yarat','Fikir Üretme','💡','İyi fikir, çok fikrin arasından çıkar; önce miktar, sonra kalite.|Kötü fikirleri yazmaya izin vermek, iyi fikirlerin önünü açar.|Fikirler birleşimdir; uzak iki şeyi yan yana koymak yeni olanı doğurur.','Bir konu seç ve 10 fikir yaz — kötü olmaları serbest.'],
-['yarat','Günlük Yazma','📓','Yazmak düşünmenin daha yavaş, daha net hâlidir.|Kimseye göstermeyeceğin bir sayfa, en dürüst sayfadır.|Düzenli yazanlar, duygularını daha hızlı adlandırır.','Süre bitene kadar durmadan yaz. Ne yazdığın önemli değil, durmaman önemli.'],
-['yarat','Çizim','🖊️','Çizim yeteneği değil, bakma alışkanlığıdır.|Kötü çizmeye izin vermek, çizmeye başlamanın tek yoludur.|Gördüğünü değil, bildiğini çizmek en yaygın hatadır.','Önündeki bir nesneye bak ve kaleme bakmadan konturunu çiz.'],
-['yarat','Müzik','🎵','Müzik dinlemek de üretmek de beynin farklı bölgelerini aynı anda çalıştırır.|Ritim tutmak, koordinasyon ve odak için sessiz bir egzersizdir.|Enstrümanda ilerleme, süreden çok düzenli tekrara bağlıdır.','Bir şarkıyı sadece ritmine odaklanarak dinle ya da elinle tempo tut.'],
-['yarat','Yaratıcı Tıkanma','🧱','Tıkanma çoğu zaman fikir yokluğu değil, mükemmeliyet baskısıdır.|Kötü bir ilk versiyon, boş sayfadan sonsuz kat değerlidir.|Ortamı ya da aracı değiştirmek tıkanmayı sık sık çözer.','Bilerek kötü bir taslak üret. Düzeltmeyi sonraya bırak.'],
-['yarat','İlham Toplama','🧺','İlham beklenmez, biriktirilir.|Beğendiğin şeyleri bir yerde toplamak, kendi tarzını görünür kılar.|Farklı alanlardan beslenmek, benzemeyen fikirler üretir.','Beğendiğin üç şeyi kaydet ve ortak yanlarını tek cümleyle yaz.'],
-['yarat','Hikâye Anlatma','📜','İyi hikâye bilgi değil, değişim anlatır.|Somut ayrıntı, genel açıklamadan çok daha akılda kalır.|Her hikâyede bir istek ve bir engel vardır.','Başından geçen bir olayı üç cümlede anlat: durum, engel, değişim.'],
-['yarat','Fotoğraf','📷','Fotoğraf makineden çok, bakış açısı meselesidir.|Işık en önemli malzemedir; saat değişince sahne de değişir.|Kadrajdan çıkardığın şey, koyduğun kadar önemlidir.','Tek bir nesneyi üç farklı açıdan fotoğrafla ve farkı karşılaştır.'],
-['yarat','El İşi','🧶','Elle bir şey üretmek, zihni ekranın gerginliğinden çıkarır.|Süreçte hata yapmak, öğrenmenin doğal parçasıdır.|Bitmiş küçük bir iş, yarım kalmış büyük işten iyi hissettirir.','Elinle küçük bir şey üret: katla, ör, onar, birleştir.'],
-['yarat','Oyun Gibi Düşünmek','🎲','Oyun hissi, öğrenmenin en verimli hâlidir.|Sonucu ciddiye alıp süreci hafifletmek yaratıcılığı artırır.|Kural değiştirerek denemek, çözüme farklı kapı açar.','Sıkıcı bir işe bir kural ekleyip oyuna çevir: süre koy, puan ver.'],
-/* — Uyku & Dinlenme — */
-['uyku','Uyku Rutini','🌙','Uyku bir düğme değil, iniş pistidir; yavaşlama süresi ister.|Aynı saatte yatıp kalkmak, süreden bile önemli olabilir.|Yatak odasının serin ve karanlık olması uykuyu derinleştirir.','Yatmadan önce yapacağın 3 adımlık sakin bir rutin belirle ve bugün uygula.'],
-['uyku','Ekran ve Uyku','📱','Ekran ışığı uyku hormonunu geciktirir; asıl sorun ise içeriğin uyarıcılığıdır.|Yatakta telefon, zihne "burası uyanık kalma yeri" der.|Alarmı telefondan ayırmak, sabahı da değiştirir.','Bu gece telefonu yatak odasının dışında bırak ya da uzağa koy.'],
-['uyku','Şekerleme','😴','Kısa şekerleme dikkati tazeler; uzun olan sersemletir.|Öğleden sonra geç saatte yapılan şekerleme gece uykusunu böler.|20 dakika, çoğu insan için ideal aralıktır.','Kısa bir şekerleme için süre seç, alarm kur ve uzan.'],
-['uyku','Gerçek Mola','☕','Ekrandan ekrana geçmek mola değil, yer değiştirmedir.|Gerçek mola bedeni hareket ettirir ve gözü uzağa bakmaya bırakır.|Kısa ve sık molalar, uzun ve seyrek olanlardan daha çok toparlar.','Ayağa kalk, uzağa bak, birkaç adım at. Ekrana hiç dokunma.'],
-['uyku','Doğada Zaman','🌳','Doğada geçen kısa süre bile stres seviyesini ölçülebilir biçimde düşürür.|Yeşil alanda yürümek, dikkati zorlamadan toparlar.|Gün ışığı, iç saatin en güçlü ayarlayıcısıdır.','Dışarı çık ve gökyüzüne bak. Süre bitene kadar telefona bakma.'],
-['uyku','Sessizlik','🔇','Sürekli ses, fark edilmeyen bir yorgunluk üretir.|Sessizlik zihne dağınık düşünceleri toparlama fırsatı verir.|Boşluk sıkıcı değil, fikirlerin ortaya çıktığı yerdir.','Hiçbir ses olmadan otur. Duyduğun en uzak sesi bulmaya çalış.'],
-['uyku','Aşırı Uyarılma','🎚️','Beyin gün boyu aldığı uyarıyı sindirmek için boşluk ister.|Çok fazla bilgi, karar verme kalitesini sessizce düşürür.|Dinlenmek yeni içerik tüketmek değildir.','Bugün bir saat boyunca yeni hiçbir içerik tüketme; sadece var olanı sindir.'],
-['uyku','Rüya Günlüğü','💤','Rüyalar, uyanıkken görmezden geldiğin şeyleri sık sık geri getirir.|Uyanır uyanmaz yazmazsan, birkaç dakikada silinir.|Rüya kaydı, hatırlama kapasitesini de artırır.','Yatağının yanına kâğıt koy ve sabah aklında kalan ilk görüntüyü yaz.'],
-['uyku','Tükenmişlik','🕯️','Tükenmişlik yorgunluk değil, anlamla bağın kopmasıdır.|Belirtiler yavaş gelir: ilgisizlik, sinirlilik, sabah isteksizliği.|Çözüm daha çok çalışmak değil, yükü ve sınırı gözden geçirmektir.','Enerjini en çok tüketen üç şeyi yaz ve birinden bugün küçük bir yük çıkar.'],
-['uyku','Yavaşlamak','🐢','Hız her zaman ilerleme değildir; bazen sadece gürültüdür.|Yavaş yapılan iş, sonradan düzeltilmesi gereken işten hızlıdır.|Acele hissi genellikle gerçek acele değil, alışkanlıktır.','Bir işi bilerek yarı hızda yap ve fark ettiğin şeyleri not et.'],
-/* — Karakter & Anlam — */
-['karakter','Değerlerin','🧭','Değerler hedef değildir; hedefe giderken nasıl davranacağını söyler.|Zamanını nereye harcadığın, gerçek değerlerini listenden daha iyi anlatır.|Değer çatışması, çoğu kararsızlığın asıl sebebidir.','Senin için en önemli üç değeri yaz ve son haftanda hangisine göre yaşadığını işaretle.'],
-['karakter','Amaç Belirleme','🏁','İyi amaç ölçülebilir ve bir tarihi olandır; "daha iyi olmak" amaç değildir.|Sonuç hedefi ilham verir, süreç hedefi taşır.|Yazılmayan amaç, niyet olarak kalır.','Bir amacını yaz: ne, ne zaman ve bunu haftada kaç kez yapacaksın.'],
-['karakter','Alışkanlık Döngüsü','♻️','Her alışkanlığın bir ipucu, bir davranış ve bir ödülü vardır.|Alışkanlığı bırakmak yerine ipucunu değiştirmek daha kolaydır.|Görünür ve kolay olan davranış kazanır.','Bırakmak istediğin alışkanlığın ipucunu bul ve ortamdan kaldır.'],
-['karakter','Disiplin','🪖','Disiplin motivasyonun olmadığı günler için kurulan sistemdir.|İrade sınırlıdır; ortam tasarımı sınırsız çalışır.|Küçük ve her gün, büyük ve ara sıra olanı yener.','Bugün canın istemese de yapacağın tek küçük şeyi belirle ve yap.'],
-['karakter','Cesaret','🦁','Cesaret korkusuzluk değil, korkuya rağmen adım atmaktır.|Korku genelde tahmin edilen acıdır, yaşanan değil.|Cesaret küçük seçimlerle büyür, büyük anlarda ortaya çıkmaz.','Ertelediğin küçük ama korkutucu bir adımı bugün at.'],
-['karakter','Sabır','🌾','Sabır beklemek değil, beklerken doğru şeyi yapmaya devam etmektir.|Çoğu değerli sonuç, görünür olmadan önce uzun süre görünmez birikir.|Aceleyle bozulan iş, sabırla kazanılan zamandan çok daha pahalıdır.','Sonucunu beklediğin bir konuda bugün yapabileceğin küçük adımı yap ve gerisini bırak.'],
-['karakter','Dürüstlük','🕊️','Dürüstlük hatırlanacak tek versiyona sahip olmaktır.|Küçük yalanlar, güveni büyük yalanlardan daha sık aşındırır.|Doğruyu nazikçe söylemek de mümkündür.','Bugün küçük bir konuda kolay yalan yerine nazik doğruyu söyle.'],
-['karakter','Yardımseverlik','🤲','Yardım etmek, yardım edenin ruh hâlini de ölçülebilir biçimde iyileştirir.|Küçük ve zamanında yapılan yardım, büyük ve gecikmişten değerlidir.|Karşılık beklemeden verilen, ilişkiyi en çok güçlendirendir.','Bugün birine küçük bir yardım et ve karşılık bekleme.'],
-['karakter','Kimlik ve Değişim','🦋','Davranış değil kimlik değişince alışkanlık kalıcı olur: "spor yapıyorum" yerine "sporcuyum".|Her küçük eylem, olmak istediğin kişi için bir oydur.|Geçmiş kimliğin, gelecek seçimlerini belirlemek zorunda değildir.','"Ben … biriyim" cümlesini olmak istediğin hâlinle kur ve bugün onu doğrulayan bir şey yap.'],
-['karakter','Anlam Bulmak','✨','Anlam bulunmaz, üretilir; genelde katkı ve bağ içinde ortaya çıkar.|"Neden" güçlüyse, "nasıl" çoğu zaman kendiliğinden gelir.|Küçük ama düzenli katkı, büyük ama soyut amaçtan daha çok anlam taşır.','Yaptığın bir işin kime dokunduğunu yaz. Bu cümleyi görebileceğin yere as.'],
-];
+const KONU = {};
+Object.assign(KONU, KONULAR, SPOR_KONULAR);
+for (const d of DILLER) {
+  KONU['dil_' + d.id] = DIL_TEMALAR.map((tema, i) => {
+    const w = (d.t[i] || '').split('|').map(s => s.split('='));
+    return [tema, w.map(p => p[0] + ' → ' + p[1]).join('  ·  '), w];
+  });
+}
+const ALANOF = Object.fromEntries(ALAN.map(a => [a.id, a]));
+const TOPLAM = ALAN.reduce((s, a) => s + (KONU[a.id] || []).length, 0);
+const GRUPLAR = [...new Set(ALAN.map(a => a.grp))];
 
 /* ============ DURUM ============ */
-const KEY='gelisim-dunyasi-v2';
-const S=Object.assign({done:[],xp:0,streak:0,best:0,last:'',day:'',dayCount:0,min:0,snd:1,picks:[],pickDay:''},
-  JSON.parse(localStorage.getItem(KEY)||'{}'));
-const today=()=>new Date().toISOString().slice(0,10);
-const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KEY = 'gelisim-dunyasi-v3';
+const S = Object.assign({done: [], xp: 0, wins: 0, streak: 0, last: '', snd: 1, px: 0, py: 0},
+  JSON.parse(localStorage.getItem(KEY) || '{}'));
+const save = () => localStorage.setItem(KEY, JSON.stringify(S));
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const bugun = () => new Date().toISOString().slice(0, 10);
+const doneSet = new Set(S.done);
+const key = (a, i) => a + ':' + i;
+const isDone = (a, i) => doneSet.has(key(a, i));
+const alanDone = a => (KONU[a] || []).filter((_, i) => isDone(a, i)).length;
 
-function checkDay(){
-  const t=today();
-  if(S.day!==t){ S.day=t; S.dayCount=0; }
-  if(S.last&&S.last!==t){
-    const d=(new Date(t)-new Date(S.last))/86400000;
-    if(d>1) S.streak=0;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2300); }
+
+/* ============ SES ============ */
+let AC = null;
+function sfx(kind) {
+  if (!S.snd) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const map = {ok: [660, .16, 'triangle', .07], bad: [150, .2, 'sawtooth', .05], tick: [420, .05, 'square', .035],
+      note0: [392, .16, 'sine', .07], note1: [494, .16, 'sine', .07], note2: [587, .16, 'sine', .07], note3: [784, .16, 'sine', .07]};
+    const [f, d, t, v] = map[kind] || map.tick;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = t; o.frequency.value = f; g.gain.value = v;
+    o.connect(g); g.connect(AC.destination);
+    g.gain.setValueAtTime(v, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d);
+    o.start(); o.stop(AC.currentTime + d);
+  } catch (e) {}
+}
+const fanfare = () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => { if (S.snd) sfx('ok'); }, i * 95));
+
+/* ============ EKRAN GEÇİŞİ ============ */
+let ekran = 'harita';
+function go(id) {
+  ekran = id;
+  $$('.scr').forEach(s => s.classList.toggle('on', s.id === 's-' + id || s.id === id));
+  $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.s === id));
+  $('#nav').classList.toggle('hide', id === 'oyun' || id === 'alan');
+  $('#stick').classList.toggle('on', id === 'harita');
+  if (id === 'liste') buildListe();
+  if (id === 'ben') buildBen();
+  if (id === 'harita') { $('#tip').classList.add('on'); setTimeout(() => $('#tip').classList.remove('on'), 3200); }
+}
+$$('#nav button').forEach(b => b.onclick = () => { go(b.dataset.s); sfx('tick'); });
+
+/* ============ HARİTA (oynanabilir) ============ */
+const map = $('#map'), mc = map.getContext('2d');
+let MW = 0, MH = 0;
+const WORLD = {w: 4400, h: 4000};
+const nodes = [], kume = [];
+(function layout() {
+  const cx = WORLD.w / 2, cy = WORLD.h / 2, TAU = Math.PI * 2, GAP = 165;
+  GRUPLAR.forEach((grp, gi) => {
+    const list = ALAN.filter(a => a.grp === grp);
+    const ang = gi / GRUPLAR.length * TAU - Math.PI / 2;
+    const gx = cx + Math.cos(ang) * 1420, gy = cy + Math.sin(ang) * 1420;
+    let i = 0, ring = 0, rmax = 0;
+    while (i < list.length) {
+      const rr = ring * GAP;
+      const cap = ring === 0 ? 1 : Math.max(6, Math.floor(TAU * rr / GAP));
+      for (let k = 0; k < cap && i < list.length; k++, i++) {
+        const th = ring === 0 ? 0 : (k / cap) * TAU + ring * .7;
+        nodes.push({a: list[i], x: gx + Math.cos(th) * rr, y: gy + Math.sin(th) * rr, ph: Math.random() * 6, grp});
+      }
+      rmax = rr; ring++;
+    }
+    kume.push({grp, x: gx, y: gy, r: rmax + GAP, col: list[0].a});
+  });
+})();
+const P = {x: S.px || kume[0].x, y: S.py || kume[0].y + 40, vx: 0, vy: 0, ang: 0};
+const cam = {x: 0, y: 0};
+const stars = Array.from({length: 220}, () => ({x: Math.random() * WORLD.w, y: Math.random() * WORLD.h, r: Math.random() * 1.7 + .3, d: Math.random()}));
+let near = null, kmap = {};
+addEventListener('keydown', e => { kmap[e.key] = 1; if ([' ', 'Enter'].includes(e.key) && near && ekran === 'harita') { aktifAlanFrom = 'harita'; openAlan(near.a.id); } });
+addEventListener('keyup', e => kmap[e.key] = 0);
+
+/* sanal joystick */
+let stick = null;
+const stEl = $('#stick'), stKnob = stEl.querySelector('i');
+function stickStart(e) {
+  if (ekran !== 'harita') return;
+  const t = e.touches ? e.touches[0] : e;
+  stick = {ox: t.clientX, oy: t.clientY, dx: 0, dy: 0};
+  stEl.style.left = (t.clientX - 59) + 'px';
+  stEl.style.top = (t.clientY - 59) + 'px';
+  stEl.style.bottom = 'auto';
+}
+function stickMove(e) {
+  if (!stick) return;
+  const t = e.touches ? e.touches[0] : e;
+  let dx = t.clientX - stick.ox, dy = t.clientY - stick.oy;
+  const d = Math.hypot(dx, dy), max = 52;
+  if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+  stick.dx = dx / max; stick.dy = dy / max;
+  stKnob.style.transform = `translate(${dx}px,${dy}px)`;
+}
+function stickEnd() { stick = null; stKnob.style.transform = ''; stEl.style.left = '22px'; stEl.style.top = 'auto'; stEl.style.bottom = 'calc(26px + var(--sb))'; }
+map.addEventListener('pointerdown', e => { map.setPointerCapture(e.pointerId); stickStart(e); });
+map.addEventListener('pointermove', stickMove);
+map.addEventListener('pointerup', stickEnd);
+map.addEventListener('pointercancel', stickEnd);
+
+function resizeAll() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  [map, $('#gcanvas')].forEach(cv => {
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  });
+  MW = innerWidth; MH = innerHeight;
+}
+addEventListener('resize', resizeAll); resizeAll();
+
+let tick = 0;
+function mapLoop() {
+  requestAnimationFrame(mapLoop);
+  if (ekran !== 'harita') return;
+  tick++;
+  // hareket
+  let ax = 0, ay = 0;
+  if (stick) { ax = stick.dx; ay = stick.dy; }
+  if (kmap.ArrowLeft || kmap.a) ax = -1;
+  if (kmap.ArrowRight || kmap.d) ax = 1;
+  if (kmap.ArrowUp || kmap.w) ay = -1;
+  if (kmap.ArrowDown || kmap.s) ay = 1;
+  P.vx = (P.vx + ax * .85) * .92;
+  P.vy = (P.vy + ay * .85) * .92;
+  P.x = Math.max(40, Math.min(WORLD.w - 40, P.x + P.vx));
+  P.y = Math.max(40, Math.min(WORLD.h - 40, P.y + P.vy));
+  if (Math.hypot(P.vx, P.vy) > .4) P.ang = Math.atan2(P.vy, P.vx);
+  cam.x += (P.x - MW / 2 - cam.x) * .1;
+  cam.y += (P.y - MH / 2 - cam.y) * .1;
+
+  // yakın düğüm
+  let best = null, bd = 1e9;
+  for (const n of nodes) { const d = Math.hypot(P.x - n.x, P.y - n.y); if (d < 96 && d < bd) { bd = d; best = n; } }
+  if (best !== near) {
+    near = best;
+    const btn = $('#enter');
+    if (near) {
+      btn.classList.add('on');
+      $('#enterIc').textContent = near.a.e;
+      $('#enterTx').textContent = near.a.n;
+      sfx('tick');
+    } else btn.classList.remove('on');
   }
-  save();
+  drawMap();
+  if (tick % 90 === 0) { S.px = P.x; S.py = P.y; save(); }
 }
-checkDay();
+function drawMap() {
+  const c = mc;
+  const bg = c.createLinearGradient(0, 0, 0, MH);
+  bg.addColorStop(0, '#0b1024'); bg.addColorStop(1, '#04060d');
+  c.fillStyle = bg; c.fillRect(0, 0, MW, MH);
+  // yıldızlar
+  for (const s of stars) {
+    const px = s.x - cam.x * (.4 + s.d * .5), py = s.y - cam.y * (.4 + s.d * .5);
+    if (px < -10 || px > MW + 10 || py < -10 || py > MH + 10) continue;
+    c.globalAlpha = .25 + s.d * .6; c.fillStyle = '#fff';
+    c.fillRect(px, py, s.r, s.r);
+  }
+  c.globalAlpha = 1;
+  // grup halesi
+  for (const k of kume) {
+    const mx = k.x - cam.x, my = k.y - cam.y;
+    if (mx < -k.r - 200 || mx > MW + k.r + 200 || my < -k.r - 200 || my > MH + k.r + 200) continue;
+    const gr = c.createRadialGradient(mx, my, 20, mx, my, k.r);
+    gr.addColorStop(0, k.col + '2e'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = gr; c.beginPath(); c.arc(mx, my, k.r, 0, 6.3); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.3)'; c.textAlign = 'center';
+    c.font = '800 14px -apple-system,system-ui,sans-serif';
+    c.fillText(k.grp.toUpperCase(), mx, my - k.r + 26);
+  }
+  // düğümler
+  for (const n of nodes) {
+    const x = n.x - cam.x, y = n.y - cam.y;
+    if (x < -80 || x > MW + 80 || y < -80 || y > MH + 80) continue;
+    n.ph += .02;
+    const tot = (KONU[n.a.id] || []).length, dn = alanDone(n.a.id);
+    const r = 26 + Math.sin(n.ph) * 1.6 + (near === n ? 6 : 0);
+    const gr = c.createRadialGradient(x, y, 0, x, y, r * 2.6);
+    gr.addColorStop(0, n.a.a + '55'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = gr; c.beginPath(); c.arc(x, y, r * 2.6, 0, 6.3); c.fill();
+    const g2 = c.createLinearGradient(x - r, y - r, x + r, y + r);
+    g2.addColorStop(0, n.a.a); g2.addColorStop(1, n.a.b);
+    c.fillStyle = g2; c.beginPath(); c.arc(x, y, r, 0, 6.3); c.fill();
+    if (dn) {
+      c.strokeStyle = '#5ce6a0'; c.lineWidth = 3.4;
+      c.beginPath(); c.arc(x, y, r + 5, -Math.PI / 2, -Math.PI / 2 + 6.283 * dn / tot); c.stroke();
+    }
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#0a0f1c';
+    if (n.a.grp === 'Dil') { // bayrak emojisi her cihazda çizilmiyor → kod yazısı
+      c.font = '800 ' + Math.round(r * .62) + 'px -apple-system,system-ui,sans-serif';
+      c.fillText(n.a.id.slice(4).toUpperCase(), x, y + 1);
+    } else {
+      c.fillStyle = '#fff';
+      c.font = (r * .92) + 'px -apple-system,system-ui,sans-serif';
+      c.fillText(n.a.e, x, y + 1);
+    }
+    c.fillStyle = near === n ? '#fff' : 'rgba(255,255,255,.62)';
+    c.font = (near === n ? '800 12px ' : '700 11px ') + '-apple-system,system-ui,sans-serif';
+    c.fillText(n.a.n, x, y + r + 16);
+  }
+  // oyuncu gemisi
+  const px = P.x - cam.x, py = P.y - cam.y;
+  c.save(); c.translate(px, py); c.rotate(P.ang);
+  const th = Math.hypot(P.vx, P.vy);
+  if (th > .3) {
+    const fg = c.createLinearGradient(-14, 0, -14 - th * 6, 0);
+    fg.addColorStop(0, '#ffb35c'); fg.addColorStop(1, 'rgba(255,120,0,0)');
+    c.fillStyle = fg;
+    c.beginPath(); c.moveTo(-13, -5); c.lineTo(-13 - th * 7, 0); c.lineTo(-13, 5); c.closePath(); c.fill();
+  }
+  c.fillStyle = '#e8eeff';
+  c.beginPath(); c.moveTo(20, 0); c.quadraticCurveTo(2, -9, -13, -7);
+  c.lineTo(-13, 7); c.quadraticCurveTo(2, 9, 20, 0); c.closePath(); c.fill();
+  c.fillStyle = '#93a6d6';
+  c.beginPath(); c.moveTo(-2, -7); c.lineTo(-12, -16); c.lineTo(-14, -7); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(-2, 7); c.lineTo(-12, 16); c.lineTo(-14, 7); c.closePath(); c.fill();
+  c.fillStyle = '#4fd1ff'; c.beginPath(); c.arc(6, 0, 4.2, 0, 6.3); c.fill();
+  c.restore();
+}
+mapLoop();
 
-/* ses */
-let AC=null;
-function beep(f,d=.12,v=.05,t='sine'){
-  if(!S.snd) return;
-  try{
-    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-    if(AC.state==='suspended') AC.resume();
-    const o=AC.createOscillator(),g=AC.createGain();
-    o.type=t;o.frequency.value=f;g.gain.value=v;
-    o.connect(g);g.connect(AC.destination);
-    g.gain.setValueAtTime(v,AC.currentTime);
-    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);
-    o.start();o.stop(AC.currentTime+d);
-  }catch(e){}
-}
-const chime=()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.22,.06,'triangle'),i*90));};
+$('#enter').onclick = () => { if (near) { aktifAlanFrom = 'harita'; openAlan(near.a.id); } };
+$('#findBtn').onclick = () => { go('liste'); sfx('tick'); };
 
-function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2400); }
-const isDone=i=>S.done.includes(i);
+/* ============ ALAN EKRANI ============ */
+let aktifAlan = null;
+function openAlan(id) {
+  aktifAlan = id;
+  const a = ALANOF[id], list = KONU[id] || [];
+  document.documentElement.style.setProperty('--a1', a.a);
+  document.documentElement.style.setProperty('--a2', a.b);
+  $('#alanAd').textContent = a.e + '  ' + a.n;
+  const dn = alanDone(id);
+  $('#alanSub').textContent = `${a.grp} · ${dn}/${list.length} konu · oyun: ${GAMES[a.g].ad}`;
+  $('#alanBar').style.width = (dn / list.length * 100) + '%';
+  $('#alanBar').style.background = `linear-gradient(90deg,${a.a},${a.b})`;
+  $('#konuList').innerHTML = list.map((k, i) => `
+    <button class="row${isDone(id, i) ? ' done' : ''}" data-i="${i}">
+      <span class="ic" style="background:linear-gradient(150deg,${a.a},${a.b})">${isDone(id, i) ? '✓' : i + 1}</span>
+      <span class="tx"><b>${k[0]}</b><span>${isDone(id, i) ? k[1] : 'Oyunu kazan, bilgiyi aç'}</span></span>
+      <span class="ck">▶</span></button>`).join('');
+  $$('#konuList .row').forEach(b => b.onclick = () => startGame(id, +b.dataset.i));
+  go('alan');
+  sfx('tick');
+}
+$('#alanBack').onclick = () => go(aktifAlanFrom || 'harita');
+let aktifAlanFrom = 'harita';
 
-/* ============ KEŞFET ============ */
-function tileHTML(i){
-  const [c,n,e]=TOPICS[i], k=CAT[c];
-  return `<button class="tile${isDone(i)?' done':''}" data-i="${i}" style="background:linear-gradient(155deg,${k.a},${k.b})">
-    <span class="e">${e}</span><span class="n">${n}</span><span class="m">${isDone(i)?'tamamlandı':k.n}</span></button>`;
+/* ============ LİSTE ============ */
+function buildListe(filter = '') {
+  const f = filter.trim().toLowerCase();
+  const el = $('#alanList');
+  $('#listeSub').textContent = `${ALAN.length} alan · ${TOPLAM} konu · ${S.done.length} tamamlandı`;
+  let html = '';
+  for (const grp of GRUPLAR) {
+    const list = ALAN.filter(a => a.grp === grp && (!f || (a.n + ' ' + a.grp).toLowerCase().includes(f)));
+    if (!list.length) continue;
+    html += `<div class="grouphead">${grp}</div>`;
+    html += list.map(a => {
+      const tot = (KONU[a.id] || []).length, dn = alanDone(a.id);
+      return `<button class="row${dn === tot ? ' done' : ''}" data-a="${a.id}">
+        <span class="ic" style="background:linear-gradient(150deg,${a.a},${a.b})">${a.e}</span>
+        <span class="tx"><b>${a.n}</b><span>${dn}/${tot} konu · ${GAMES[a.g].ad}</span></span>
+        <span class="ck">${dn === tot ? '✓' : '›'}</span></button>`;
+    }).join('');
+  }
+  el.innerHTML = html || '<div class="empty">Sonuç yok.</div>';
+  $$('#alanList .row').forEach(b => b.onclick = () => { aktifAlanFrom = 'liste'; openAlan(b.dataset.a); });
 }
-function rowHTML(i){
-  const [c,n,e]=TOPICS[i], k=CAT[c];
-  return `<button class="row${isDone(i)?' done':''}" data-i="${i}" style="width:100%;text-align:left">
-    <span class="ic" style="background:linear-gradient(155deg,${k.a},${k.b})">${e}</span>
-    <span class="tx"><b>${n}</b><span>${k.n}</span></span>
-    <span class="ck">${isDone(i)?'✓':'›'}</span></button>`;
-}
-function buildRails(){
-  $('#rails').innerHTML=CATS.map(k=>{
-    const idx=TOPICS.map((t,i)=>[t,i]).filter(([t])=>t[0]===k.id).map(([,i])=>i);
-    const d=idx.filter(isDone).length;
-    return `<div class="rail"><div class="railhead"><h2>${k.e} ${k.n}</h2><span class="ct">${d}/${idx.length}</span></div>
-      <div class="scroller">${idx.map(tileHTML).join('')}</div></div>`;
-  }).join('');
-  $('#k-sub').textContent=`${TOPICS.length} konu · ${S.done.length} tamamlandı`;
-}
-$('#q').addEventListener('input',e=>{
-  const q=e.target.value.trim().toLowerCase();
-  const R=$('#results'), L=$('#rails');
-  if(!q){ R.style.display='none'; L.style.display=''; return; }
-  L.style.display='none'; R.style.display='';
-  const hit=TOPICS.map((t,i)=>i).filter(i=>(TOPICS[i][1]+' '+CAT[TOPICS[i][0]].n).toLowerCase().includes(q));
-  R.innerHTML=hit.length?hit.map(rowHTML).join(''):'<div class="empty">Sonuç yok. Başka bir kelime dene.</div>';
-});
-document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-i]');
-  if(el) open(+el.dataset.i);
-});
-$('#shuffle').onclick=()=>{
-  const pool=TOPICS.map((t,i)=>i).filter(i=>!isDone(i));
-  open((pool.length?pool:TOPICS.map((t,i)=>i))[Math.floor(Math.random()*(pool.length||TOPICS.length))]);
-};
-
-/* ============ BUGÜN ============ */
-function buildToday(){
-  if(S.pickDay!==today()||!S.picks.length) newPicks(false);
-  $('#picks').innerHTML=S.picks.map(rowHTML).join('');
-  const n=Math.min(S.dayCount,3), off=258-258*(n/3);
-  $('#dayRing').style.strokeDashoffset=off;
-  $('#dayNum').textContent=n;
-  $('#streakTxt').textContent=`Seri: ${S.streak} gün`;
-  $('#dayTxt').textContent=`Bugün ${S.dayCount} / 3 keşif`;
-  $('#dayBar').style.width=(n/3*100)+'%';
-  $('#b-sub').textContent=n>=3?'Bugünü tamamladın 🎉':'Üç küçük adım yeter';
-}
-function newPicks(re=true){
-  const pool=TOPICS.map((t,i)=>i).filter(i=>!isDone(i));
-  const src=pool.length>=3?pool:TOPICS.map((t,i)=>i);
-  const set=new Set();
-  while(set.size<3) set.add(src[Math.floor(Math.random()*src.length)]);
-  S.picks=[...set]; S.pickDay=today(); save();
-  if(re) buildToday();
-}
-$('#newPicks').onclick=()=>{ newPicks(); beep(660,.08); };
+$('#q').addEventListener('input', e => buildListe(e.target.value));
 
 /* ============ BEN ============ */
-function buildMe(){
-  const lvl=Math.floor(S.xp/100)+1, into=S.xp%100;
-  $('#lvlTxt').textContent=`Seviye ${lvl}`;
-  $('#xpTxt').textContent=`${S.xp} XP`;
-  $('#nextTxt').textContent=`${100-into} XP’de seviye ${lvl+1}`;
-  $('#xpBar').style.width=into+'%';
-  $('#stDone').textContent=`${S.done.length} / ${TOPICS.length}`;
-  $('#stBest').textContent=`${S.best} gün`;
-  $('#stMin').textContent=`${S.min} dk`;
-  $('#catbars').innerHTML=CATS.map(k=>{
-    const idx=TOPICS.map((t,i)=>[t,i]).filter(([t])=>t[0]===k.id).map(([,i])=>i);
-    const d=idx.filter(isDone).length, p=d/idx.length*100;
-    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:.88rem">
-      <span>${k.e} ${k.n}</span><span style="color:var(--dim)">${d}/${idx.length}</span></div>
-      <div class="bar"><i style="width:${p}%;background:linear-gradient(90deg,${k.a},${k.b})"></i></div></div>`;
+function buildBen() {
+  const lvl = Math.floor(S.xp / 100) + 1, into = S.xp % 100;
+  $('#lvlTxt').textContent = 'Seviye ' + lvl;
+  $('#xpTxt').textContent = S.xp + ' XP';
+  $('#nextTxt').textContent = (100 - into) + ' XP’de seviye ' + (lvl + 1);
+  $('#xpBar').style.width = into + '%';
+  $('#stDone').textContent = S.done.length + ' / ' + TOPLAM;
+  $('#stWin').textContent = S.wins;
+  $('#stStreak').textContent = S.streak + ' gün';
+  $('#grpBars').innerHTML = GRUPLAR.map(grp => {
+    const list = ALAN.filter(a => a.grp === grp);
+    const tot = list.reduce((s, a) => s + (KONU[a.id] || []).length, 0);
+    const dn = list.reduce((s, a) => s + alanDone(a.id), 0);
+    return `<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:.86rem">
+      <span>${grp}</span><span style="color:var(--dim)">${dn}/${tot}</span></div>
+      <div class="bar"><i style="width:${dn / tot * 100}%;background:linear-gradient(90deg,${list[0].a},${list[0].b})"></i></div></div>`;
   }).join('');
-  $('#sndBtn').textContent=S.snd?'Açık':'Kapalı';
-  $('#sndBtn').classList.toggle('on',!!S.snd);
+  $('#sndBtn').textContent = S.snd ? 'Açık' : 'Kapalı';
+  $('#lvlPill').textContent = '⭐ Sv ' + lvl;
 }
-$('#sndBtn').onclick=()=>{ S.snd=S.snd?0:1; save(); buildMe(); if(S.snd)beep(760,.1); };
-$('#resetBtn').onclick=()=>{
-  if(!confirm('Tüm ilerlemen silinecek. Emin misin?')) return;
-  localStorage.removeItem(KEY); location.reload();
-};
+$('#sndBtn').onclick = () => { S.snd = S.snd ? 0 : 1; save(); buildBen(); if (S.snd) sfx('ok'); };
+$('#resetBtn').onclick = () => { if (confirm('Tüm ilerlemen silinecek. Emin misin?')) { localStorage.removeItem(KEY); location.reload(); } };
 
-/* ============ GEZİNME ============ */
-let cur='kesfet';
-function go(v){
-  if(v===cur) return;
-  cur=v;
-  $$('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  if(v==='bugun') buildToday();
-  if(v==='ben') buildMe();
-  beep(520,.06,.03);
-}
-$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+/* ============ OYUN HOST ============ */
+const gc = $('#gcanvas'), gctx = gc.getContext('2d');
+let GS = null, gRAF = null, gAlan = null, gIdx = 0;
 
-/* ============ OKUYUCU ============ */
-let R={i:0,step:0,total:0,cards:[],timer:null,left:0,pickedMin:0};
-const RD=$('#reader');
-
-function open(i){
-  R.i=i; R.step=0;
-  const [c,n,e,cards,prac]=TOPICS[i], k=CAT[c];
-  R.cards=cards.split('|');
-  R.total=R.cards.length+1;
-  document.documentElement.style.setProperty('--a1',k.a);
-  document.documentElement.style.setProperty('--a2',k.b);
-  $('#rbg').style.background=`linear-gradient(165deg,${k.a},${k.b})`;
-  $('#aura').style.background=`radial-gradient(45% 35% at 20% 8%, ${k.a}33, transparent 70%),radial-gradient(45% 35% at 85% 30%, ${k.b}26, transparent 70%)`;
-  $('#rtitle').textContent=`${e}  ${n}`;
-  $('#segs').innerHTML=Array.from({length:R.total},()=>'<i><b></b></i>').join('');
-  $('#done').classList.remove('on');
-  RD.classList.add('on');
-  render();
-  beep(600,.09);
-}
-function close(){
-  RD.classList.remove('on'); stopTimer();
-  buildRails(); if(cur==='bugun')buildToday(); if(cur==='ben')buildMe();
-}
-$('#rclose').onclick=close;
-$('#doneClose').onclick=close;
-$('#doneNext').onclick=()=>{
-  const pool=TOPICS.map((t,x)=>x).filter(x=>!isDone(x));
-  if(!pool.length){ close(); return; }
-  open(pool[Math.floor(Math.random()*pool.length)]);
-};
-
-function render(){
-  const [c,n,e,,prac]=TOPICS[R.i];
-  $$('#segs i b').forEach((b,x)=>b.style.width=x<=R.step?'100%':'0');
-  const s=$('#slide'), f=$('#rfoot');
-  s.style.opacity=0; s.style.transform='translateY(10px)';
-  setTimeout(()=>{
-    if(R.step<R.cards.length){
-      s.innerHTML=`${R.step===0?`<span class="em">${e}</span>`:''}
-        <div class="kicker">${R.step===0?n:'keşif '+(R.step+1)}</div>
-        <div class="tx">${R.cards[R.step]}</div>`;
-      f.innerHTML=`<button class="btn soft" id="nx">${R.step===R.cards.length-1?'Pratiğe geç →':'Devam →'}</button>`;
-      $('#nx').onclick=()=>step(1);
-    }else{
-      s.innerHTML=`<div class="kicker">pratik</div><div class="tx">${prac}</div>
-        <div class="tx sm" style="margin-top:14px;opacity:.8">Süreyi kendin seç.</div>`;
-      f.innerHTML=`<div id="timer">
-        <div id="tring"><svg width="180" height="180">
-          <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="10"/>
-          <circle id="tarc" cx="90" cy="90" r="80" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="503" stroke-dashoffset="503"/>
-        </svg><div class="n" id="tnum">--</div></div>
-        <div class="chips" id="mins">${[1,3,5,10,15].map(m=>`<button class="chip" data-m="${m}">${m} dk</button>`).join('')}</div>
-        <button class="btn" id="startBtn" style="margin-top:14px">Başlat</button>
-        <button class="btn soft" id="skipBtn" style="margin-top:8px">Süresiz tamamla</button></div>`;
-      $$('#mins .chip').forEach(b=>b.onclick=()=>{
-        $$('#mins .chip').forEach(x=>x.classList.remove('on'));
-        b.classList.add('on'); R.pickedMin=+b.dataset.m;
-        $('#tnum').textContent=R.pickedMin+':00'; beep(700,.07);
-      });
-      $('#startBtn').onclick=startTimer;
-      $('#skipBtn').onclick=()=>finish(0);
-    }
-    s.style.opacity=1; s.style.transform='none';
-  },90);
-}
-function step(d){
-  const nx=R.step+d;
-  if(nx<0) return;
-  if(nx>=R.total) return;
-  R.step=nx; stopTimer(); render(); beep(d>0?680:480,.06,.03);
-}
-$('#rtaps').addEventListener('click',e=>{
-  const d=e.target.dataset.d; if(d) step(+d);
-});
-addEventListener('keydown',e=>{
-  if(!RD.classList.contains('on')) return;
-  if(e.key==='ArrowRight') step(1);
-  if(e.key==='ArrowLeft') step(-1);
-  if(e.key==='Escape') close();
-});
-/* kaydırma */
-let sx=0,sy=0,dragging=false;
-$('#rbody').addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; dragging=true; });
-$('#rbody').addEventListener('pointerup',e=>{
-  if(!dragging) return; dragging=false;
-  const dx=e.clientX-sx, dy=e.clientY-sy;
-  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)) step(dx<0?1:-1);
-  else if(dy>90&&Math.abs(dy)>Math.abs(dx)) close();
-});
-
-/* zamanlayıcı */
-function startTimer(){
-  if(!R.pickedMin){ toast('Önce bir süre seç'); return; }
-  stopTimer();
-  R.left=R.pickedMin*60;
-  const total=R.left;
-  const tick=()=>{
-    const m=Math.floor(R.left/60), s=R.left%60;
-    $('#tnum').textContent=m+':'+String(s).padStart(2,'0');
-    $('#tarc').style.strokeDashoffset=503-503*(R.left/total);
-    if(R.left<=0){ stopTimer(); chime(); finish(R.pickedMin); return; }
-    R.left--;
+function startGame(alanId, i) {
+  gAlan = alanId; gIdx = i;
+  const a = ALANOF[alanId], konu = KONU[alanId][i], G = GAMES[a.g];
+  document.documentElement.style.setProperty('--a1', a.a);
+  document.documentElement.style.setProperty('--a2', a.b);
+  $('#gTitle').textContent = a.e + '  ' + konu[0];
+  $('#ghint').textContent = G.ipucu;
+  GS = {
+    W: innerWidth, H: innerHeight, skin: a.skin, A: a, t: 0, done: null, score: 0, goal: 1,
+    fx: [], p: {x: 0, y: 0, down: false, justDown: false}, keys: {}, sfx,
+    words: konu[2] || null, langName: a.grp === 'Dil' ? a.n : null
   };
-  tick(); R.timer=setInterval(tick,1000);
-  $('#startBtn').textContent='Durdur';
-  $('#startBtn').onclick=()=>{ stopTimer(); render(); };
-  beep(880,.12);
+  G.start(GS);
+  go('oyun');
+  if (!gRAF) gameLoop();
 }
-function stopTimer(){ if(R.timer){ clearInterval(R.timer); R.timer=null; } }
+function gameLoop() {
+  gRAF = requestAnimationFrame(gameLoop);
+  if (ekran !== 'oyun' || !GS) return;
+  const G = GAMES[ALANOF[gAlan].g];
+  GS.t++;
+  if (!GS.done) G.update(GS);
+  G.draw(GS, gctx);
+  GS.p.justDown = false;
+  if (GS.done) { const d = GS.done; GS = null; setTimeout(() => finish(d), 260); }
+}
+// girdi
+function gpos(e) { const t = e.touches ? e.touches[0] : e; return {x: t.clientX, y: t.clientY}; }
+gc.addEventListener('pointerdown', e => { if (!GS) return; gc.setPointerCapture(e.pointerId); const p = gpos(e); GS.p.x = p.x; GS.p.y = p.y; GS.p.down = true; GS.p.justDown = true; });
+gc.addEventListener('pointermove', e => { if (!GS) return; const p = gpos(e); GS.p.x = p.x; GS.p.y = p.y; });
+gc.addEventListener('pointerup', e => { if (!GS) return; GS.p.down = false; });
+gc.addEventListener('pointercancel', e => { if (GS) GS.p.down = false; });
+addEventListener('keydown', e => { if (!GS) return; if (e.key === 'ArrowUp') GS.keys.up = 1; if (e.key === 'ArrowDown') GS.keys.down = 1; });
+addEventListener('keyup', e => { if (!GS) return; if (e.key === 'ArrowUp') GS.keys.up = 0; if (e.key === 'ArrowDown') GS.keys.down = 0; });
 
-function finish(mins){
-  stopTimer();
-  const first=!isDone(R.i);
-  if(first){ S.done.push(R.i); S.xp+=10; }
-  S.min+=mins;
-  const t=today();
-  if(S.day!==t){ S.day=t; S.dayCount=0; }
-  S.dayCount++;
-  if(S.last!==t){
-    const d=S.last?(new Date(t)-new Date(S.last))/86400000:99;
-    S.streak=(d===1)?S.streak+1:1;
-    S.last=t; S.best=Math.max(S.best,S.streak);
+$('#gBack').onclick = () => { GS = null; openAlan(gAlan); };
+$('#gRetry').onclick = () => startGame(gAlan, gIdx);
+
+/* ============ SONUÇ ============ */
+function finish(res) {
+  const a = ALANOF[gAlan], konu = KONU[gAlan][gIdx];
+  const yeni = !isDone(gAlan, gIdx);
+  if (res === 'win') {
+    S.wins++;
+    if (yeni) { doneSet.add(key(gAlan, gIdx)); S.done.push(key(gAlan, gIdx)); S.xp += 10; }
+    const t = bugun();
+    if (S.last !== t) {
+      const d = S.last ? (new Date(t) - new Date(S.last)) / 86400000 : 99;
+      S.streak = d === 1 ? S.streak + 1 : 1; S.last = t;
+    }
+    save(); fanfare();
   }
-  save();
-  $('#doneT').textContent=first?'Keşfettin! +10 XP':'Tekrar tamamladın';
-  $('#doneS').textContent=`${S.done.length}/${TOPICS.length} konu · ${S.streak} günlük seri${mins?` · ${mins} dk odak`:''}`;
-  $('#done').classList.add('on');
-  chime();
-  $$('#segs i b').forEach(b=>b.style.width='100%');
+  const sheet = $('#sheet');
+  const sonraki = gIdx + 1 < KONU[gAlan].length ? gIdx + 1 : -1;
+  if (res === 'win') {
+    const kelimeler = konu[2];
+    sheet.innerHTML = `
+      <div class="mark">✓</div>
+      <h3>${konu[0]}</h3>
+      <div class="sub">${a.e} ${a.n}${yeni ? ' · +10 XP' : ''}</div>
+      ${kelimeler
+        ? `<div class="fact" style="padding:8px 14px">${kelimeler.map(w => `<div class="kelime"><span>${w[0]}</span><b>${w[1]}</b></div>`).join('')}</div>`
+        : `<div class="fact">${konu[1]}</div>`}
+      ${sonraki >= 0 ? '<button class="btn" id="nx">Sıradaki konu →</button>' : ''}
+      <button class="btn soft" id="bk">Alana dön</button>`;
+  } else {
+    sheet.innerHTML = `
+      <div class="mark" style="background:rgba(255,255,255,.1);color:#fff">↻</div>
+      <h3>Bu sefer olmadı</h3>
+      <div class="sub">${GAMES[a.g].ipucu}</div>
+      <button class="btn" id="rt">Tekrar dene</button>
+      <button class="btn soft" id="bk">Alana dön</button>`;
+  }
+  $('#sonuc').classList.add('on');
+  const close = () => $('#sonuc').classList.remove('on');
+  if ($('#nx')) $('#nx').onclick = () => { close(); startGame(gAlan, sonraki); };
+  if ($('#rt')) $('#rt').onclick = () => { close(); startGame(gAlan, gIdx); };
+  $('#bk').onclick = () => { close(); openAlan(gAlan); };
 }
 
 /* ============ BAŞLAT ============ */
-buildRails(); buildToday(); buildMe();
-if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+buildListe(); buildBen();
+$('#tip').classList.add('on'); setTimeout(() => $('#tip').classList.remove('on'), 4200);
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
 </body>
 </html>
