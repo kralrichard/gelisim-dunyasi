@@ -206,6 +206,32 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 #nav em{font-style:normal}
 @media (max-width:440px){#nav em{display:none}#nav button{padding:11px 13px}#nav button span{font-size:1.2rem}}
 
+/* ---------- RÜYA ---------- */
+#s-ruya{background:#05070d;overflow:hidden}
+#rcanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#ruyaUst{position:absolute;top:calc(var(--st) + 10px);left:0;right:0;z-index:4;display:flex;gap:8px;padding:0 12px}
+#ruyaKapak{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;padding:26px;text-align:center;
+  background:radial-gradient(120% 90% at 50% 20%,#2a1560 0%,#12082c 55%,#04010c 100%)}
+#ruyaKapak.gizli{display:none}
+#ruyaKapak h2{font-size:2rem;font-weight:900;letter-spacing:-.03em;
+  background:linear-gradient(100deg,#f0abfc,#7dd3fc,#fde047);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ruyaKapak p{color:var(--dim);font-size:.92rem;max-width:320px;line-height:1.6}
+#ruyaKapak .buyuk{font-size:3.4rem}
+#ruyaKapak .btn{max-width:290px}
+#ruyaSkor{display:flex;gap:22px;margin:4px 0 2px}
+#ruyaSkor div{text-align:center}
+#ruyaSkor b{display:block;font-size:1.7rem;font-weight:900;color:var(--ink)}
+#ruyaSkor span{font-size:.72rem;color:var(--dim2);text-transform:uppercase;letter-spacing:.1em}
+#ruyaListe{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:340px;margin-top:2px}
+#ruyaListe i{font-style:normal;font-size:.66rem;background:rgba(255,255,255,.07);border-radius:999px;
+  padding:4px 9px;color:var(--dim)}
+#fisilti{position:absolute;left:50%;transform:translateX(-50%) translateY(-10px);top:calc(var(--st) + 52px);z-index:6;
+  background:rgba(20,10,44,.88);backdrop-filter:blur(12px);border-radius:18px;padding:12px 18px;max-width:88vw;
+  font-size:.82rem;line-height:1.5;opacity:0;transition:.4s var(--ease);pointer-events:none;text-align:center}
+#fisilti.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#fisilti b{display:block;font-size:.68rem;color:#c4b5fd;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+
 /* ---------- 3B MOD ---------- */
 #s-3d{background:radial-gradient(120% 90% at 50% 0%,#161d3a 0%,#0a0e1c 55%,#04060c 100%);overflow:hidden}
 #stage3d{position:absolute;inset:0;perspective:1100px;perspective-origin:50% 46%;touch-action:none;cursor:grab}
@@ -339,6 +365,22 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
   </div>
 </section>
 
+<!-- RÜYA -->
+<section class="scr" id="s-ruya">
+  <canvas id="rcanvas"></canvas>
+  <div id="fisilti"></div>
+  <div id="ruyaKapak">
+    <div class="buyuk">🌀</div>
+    <h2>RÜYA</h2>
+    <p id="ruyaAciklama">45 oyun tek bir rüyada iç içe geçiyor. Kafa topundan klan baskınına,
+      çiftlikten ejderha yumurtasına — her sahne birkaç saniye sürüyor, sonra rüya kayıyor.
+      Derinleştikçe hızlanır ve kâbuslaşır.</p>
+    <div id="ruyaSkor"></div>
+    <div id="ruyaListe"></div>
+    <button class="btn" id="ruyaBasla">Rüyaya dal</button>
+  </div>
+</section>
+
 <!-- 3B MOD -->
 <section class="scr" id="s-3d">
   <div id="stage3d"><div id="globe"></div></div>
@@ -364,6 +406,7 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 </section>
 
 <nav id="nav">
+  <button data-s="ruya"><span>🌀</span><em>Rüya</em></button>
   <button class="on" data-s="dunya"><span>🌍</span><em>Dünya</em></button>
   <button data-s="harita"><span>🗺️</span><em>Harita</em></button>
   <button data-s="3d"><span>🧊</span><em>3B</em></button>
@@ -374,11 +417,12 @@ h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
 <div id="sonuc"><div id="sheet"></div></div>
 <div id="toast"></div>
 
-<script src="data-alan.js?v=10"></script>
-<script src="data-spor.js?v=10"></script>
-<script src="data-dil.js?v=10"></script>
-<script src="games.js?v=10"></script>
-<script src="world.js?v=10"></script>
+<script src="data-alan.js?v=14"></script>
+<script src="data-spor.js?v=14"></script>
+<script src="data-dil.js?v=14"></script>
+<script src="games.js?v=14"></script>
+<script src="world.js?v=14"></script>
+<script src="ruya.js?v=16"></script>
 <script>
 /* ============ VERİYİ BİRLEŞTİR ============ */
 const ALAN = [
@@ -446,6 +490,7 @@ function go(id) {
   if (id === 'liste') buildListe();
   if (id === 'ben') buildBen();
   if (id === '3d') open3D();
+  if (id === 'ruya') ruyaAc();
   if (id === 'harita') { $('#tip').classList.add('on'); setTimeout(() => $('#tip').classList.remove('on'), 3200); }
 }
 $$('#nav button').forEach(b => b.onclick = () => { go(b.dataset.s); sfx('tick'); });
@@ -702,6 +747,100 @@ function buildBen() {
 }
 $('#sndBtn').onclick = () => { S.snd = S.snd ? 0 : 1; save(); buildBen(); if (S.snd) sfx('ok'); };
 $('#resetBtn').onclick = () => { if (confirm('Tüm ilerlemen silinecek. Emin misin?')) { localStorage.removeItem(KEY); location.reload(); } };
+
+/* ============ RÜYA ============ */
+const rc = $('#rcanvas'), rctx = rc.getContext('2d');
+let rHazir = false, rRAF = null;
+S.ruyaRekor = S.ruyaRekor || 0;
+S.ruyaDerin = S.ruyaDerin || 0;
+
+function rastKelime() {
+  const d = DILLER[Math.floor(Math.random() * DILLER.length)];
+  const t = d.t[Math.floor(Math.random() * d.t.length)].split('|');
+  return t[Math.floor(Math.random() * t.length)].split('=');
+}
+function fisilti() {
+  const a = ALAN[Math.floor(Math.random() * ALAN.length)];
+  const list = KONU[a.id];
+  const k = list[Math.floor(Math.random() * list.length)];
+  const el = $('#fisilti');
+  el.innerHTML = `<b>rüya fısıltısı · ${a.n}</b>${k[1]}`;
+  el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 5200);
+  S.xp += 2; save();
+}
+function ruyaBoyut() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  rc.width = Math.floor(innerWidth * dpr); rc.height = Math.floor(innerHeight * dpr);
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function ruyaKapakCiz() {
+  $('#ruyaSkor').innerHTML = `
+    <div><b>${S.ruyaRekor}</b><span>Rekor</span></div>
+    <div><b>${S.ruyaDerin}</b><span>En derin</span></div>
+    <div><b>${RUYA.OYUNLAR.length}</b><span>Oyun</span></div>`;
+  $('#ruyaListe').innerHTML = RUYA.OYUNLAR.map(o => `<i>${o.ad}</i>`).join('');
+}
+function ruyaAc() {
+  if (!rHazir) {
+    RUYA.kur(rc, rctx, {ses: sfx, kelime: rastKelime, fisilti});
+    rHazir = true;
+  }
+  ruyaBoyut(); ruyaKapakCiz();
+  if (!rRAF) ruyaLoop();
+}
+function ruyaLoop() {
+  if (ekran !== 'ruya') { rRAF = null; return; }
+  rRAF = requestAnimationFrame(ruyaLoop);
+  const d = RUYA.durum;
+  if (d.calisiyor) {
+    RUYA.guncelle();
+    RUYA.ciz(innerWidth, innerHeight);
+    const s = RUYA.S;
+    s.tap = false; s.sw = null; s.p.justDown = false; s.p.justUp = false;
+    if (!d.calisiyor) ruyaBitti();
+  }
+}
+function ruyaBitti() {
+  if (RUYA.durum.puan > S.ruyaRekor) S.ruyaRekor = RUYA.durum.puan;
+  if (RUYA.durum.derinlik > S.ruyaDerin) S.ruyaDerin = RUYA.durum.derinlik;
+  S.xp += Math.floor(RUYA.durum.puan / 4);
+  save();
+  $('#ruyaAciklama').textContent =
+    `Uyandın. ${RUYA.durum.sahne} sahne gördün, ${RUYA.durum.puan} puan topladın, ${RUYA.durum.derinlik}. katmana indin.`;
+  $('#ruyaBasla').textContent = 'Tekrar dal';
+  ruyaKapakCiz();
+  $('#ruyaKapak').classList.remove('gizli');
+  fanfare();
+}
+$('#ruyaBasla').onclick = () => {
+  $('#ruyaKapak').classList.add('gizli');
+  RUYA.baslat();
+  sfx('note3');
+};
+/* girdi */
+function rp(e) { return RUYA.nokta(e.clientX, e.clientY, innerWidth, innerHeight); }
+let rBas = null;
+rc.addEventListener('pointerdown', e => {
+  if (!rHazir) return;
+  rc.setPointerCapture(e.pointerId);
+  const p = rp(e), s = RUYA.S;
+  s.p.x = p.x; s.p.y = p.y; s.p.down = true; s.p.justDown = true; s.tap = true;
+  rBas = {x: p.x, y: p.y};
+});
+rc.addEventListener('pointermove', e => {
+  if (!rHazir) return;
+  const p = rp(e), s = RUYA.S;
+  s.p.x = p.x; s.p.y = p.y;
+});
+rc.addEventListener('pointerup', e => {
+  if (!rHazir) return;
+  const p = rp(e), s = RUYA.S;
+  s.p.x = p.x; s.p.y = p.y; s.p.down = false; s.p.justUp = true;
+  if (rBas) { s.sw = {dx: p.x - rBas.x, dy: p.y - rBas.y}; rBas = null; }
+});
+rc.addEventListener('pointercancel', () => { if (rHazir) RUYA.S.p.down = false; });
+addEventListener('resize', () => { if (rHazir) ruyaBoyut(); });
 
 /* ============ VOXEL DÜNYA ============ */
 const wc = $('#wcanvas');
